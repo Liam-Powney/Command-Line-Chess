@@ -12,5 +12,9 @@ public abstract class Piece {
 
     public abstract String getPieceString();
 
+    public boolean getWhite() {
+        return white;
+    }
+
 
 }

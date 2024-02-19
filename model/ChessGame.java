@@ -8,6 +8,7 @@ public class ChessGame extends GameState{
     public ChessGame() {
         this.whitesTurn = true;
         this.board[0][4] = new King(true);
+        this.board[7][4] = new King(false);
     }
 
     public Piece[][] getBoard() {
