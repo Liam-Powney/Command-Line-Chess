@@ -10,7 +10,7 @@ public abstract class Piece {
         this.white = white;
     }
 
-    public abstract String getPieceString();
+    public abstract char getPieceChar();
 
     public boolean getWhite() {
         return white;

@@ -15,6 +15,7 @@ public class CommandLineView {
         else if (s instanceof ChessGame) {
             String outString = "";
             for ( int i=7; i>=0; i--) {
+                outString+= i+1 + "  ";
                 for(int j=0; j<=7; j++) {
                     Piece p = ((ChessGame) s).getBoard()[i][j];
                     if (p == null) {
@@ -22,10 +23,10 @@ public class CommandLineView {
                     }
                     else {
                         if (!p.getWhite()) {
-                            outString+="[" + p.getPieceString() + "]";
+                            outString+="[" + p.getPieceChar() + "]";
                         }
                         else {
-                            outString+="[" + ANSI_INVERT + p.getPieceString() + ANSI_RESET + "]";
+                            outString+="[" + ANSI_INVERT + p.getPieceChar() + ANSI_RESET + "]";
                         }
                     }
                 }
@@ -33,6 +34,7 @@ public class CommandLineView {
                     outString+="\n";
                 }
             }
+            outString+="\n    a  b  c  d  e  f  g  h";
             System.out.println(outString);
         } 
     }

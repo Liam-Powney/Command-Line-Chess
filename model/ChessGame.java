@@ -15,5 +15,11 @@ public class ChessGame extends GameState{
         return board;
     }
 
+    public boolean getWhitesTurn() {
+        return whitesTurn;
+    }
+
+    
+
 
 }
