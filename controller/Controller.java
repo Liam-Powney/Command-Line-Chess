@@ -41,7 +41,7 @@ public class Controller {
             var cg = (ChessGame) cs;
 
             if (cg.attemptMove(command)) {
-                cg.nextTurn();
+                System.out.println("That was a valid instruction");
             }
             else {
                 System.out.println("Invalid move. Please make a valid move.");
