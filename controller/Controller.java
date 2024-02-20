@@ -40,14 +40,9 @@ public class Controller {
         if (cs instanceof ChessGame) {
             var cg = (ChessGame) cs;
 
-            if (cg.attemptMove(command)) {
-                System.out.println("That was a valid instruction");
-            }
-            else {
+            if (!cg.attemptMove(command)) {
                 System.out.println("Invalid move. Please make a valid move.");
-            }
-            
-
+            }       
             
         }
     }

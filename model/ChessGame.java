@@ -51,10 +51,10 @@ public class ChessGame extends GameState{
         //normal command parsing
         char movingPieceType;
         boolean attemptedPawnPromo = false;
-        char pawnCaptureColumn;
-        Piece promoPiece;
+        char pawnColumn = '0';
+        char promoPiece = '0';
         boolean captureAttempt = false;
-        char rowDisambig, colDisambig;
+        char rowDisambig = '0', colDisambig = '0';
         char attemptxPos, attemptyPos;
         boolean attemptCheck = false, attemptCheckmate = false;
 
@@ -62,15 +62,17 @@ public class ChessGame extends GameState{
         try {
             // is the move an attempted check or checkmate?
             if (c.substring(c.length()-1).equals("+")) {
+                // King can't check or checkmate!!
+                if (c.charAt(0) == 'K') {
+                    return false;
+                }
                 if (c.substring(c.length()-2).equals("++")) {
                     attemptCheckmate = true;
                     c = c.substring(0, c.length()-2);
-                    System.out.println("Move is an attempted checkmate\n Command without '++'' is now " + c);
                 }
                 else {
                     attemptCheck = true;
                     c = c.substring(0, c.length()-1);
-                    System.out.println("Move is an attempted check\n Command without '+' is now " + c);
                 }
             }
 
@@ -81,12 +83,10 @@ public class ChessGame extends GameState{
             var char1 = c.charAt(0);
             if ('a' <= char1 && 'h' >= char1) {
                 movingPieceType = ' ';
-                System.out.println("Piece being moved is a pawn");
+                pawnColumn = c.charAt(0);
                 // is it a pawn capture? If so, need to take note of the first character which specifies the column of departure and strip it from the command
                 if (c.contains("x")) {
-                    pawnCaptureColumn = c.charAt(0);
                     c = c.substring(1, c.length());
-                    System.out.println("Move is an attempted pawn capture from column " + Character.toString(pawnCaptureColumn) + "\nCommand is now " + c);
                 }
                 // is it a pawn promo attempt?
                 try {
@@ -94,8 +94,8 @@ public class ChessGame extends GameState{
                     // check piece promo type and ensure pawn has reached the end of the board
                     if ( (promoSubstring.equals("8(Q)")) || (promoSubstring.equals("8(R)")) || (promoSubstring.equals("8(N)")) || (promoSubstring.equals("8(B)"))) {
                         attemptedPawnPromo = true;
+                        promoPiece = promoSubstring.charAt(2);
                         c = c.substring(0, c.length()-3);
-                        System.out.println("Move is an attempted pawn promotion\n Command without '(X)' is now " + c);
                     }
                 } catch (Exception e) {}
             }
@@ -103,7 +103,6 @@ public class ChessGame extends GameState{
             else if ( char1 == 'K' || char1 == 'Q' || char1 == 'R' || char1 == 'N' || char1 == 'B' ) {
                 movingPieceType = char1;
                 c = c.substring(1, c.length());
-                System.out.println("Piece being moved is " + char1 + "\n Command is now " + c);
             }
             // it's an invalid piece
             else {
@@ -118,7 +117,6 @@ public class ChessGame extends GameState{
                 attemptxPos = ch1;
                 attemptyPos = ch2;
                 c = c.substring(0, c.length()-2);
-                System.out.println("Destination square is " + ch1 + "" + ch2 + "\n c is now " + c);
             }
             else {
                 return false;
@@ -129,7 +127,6 @@ public class ChessGame extends GameState{
                 if (c.substring(c.length()-1).equals("x")) {
                     c = c.replace("x", "");
                     captureAttempt = true;
-                    System.out.println("Move is an attempted capture\n Command without 'x' at the end is now " + c);
                 }
             } catch (Exception e) {}
 
@@ -143,7 +140,6 @@ public class ChessGame extends GameState{
                 if ( ((ch1>='a') && ( ch1<='h') ) && ((ch2>='1') && ( ch2<='8')) ) {
                     colDisambig = ch1;
                     rowDisambig = ch2;
-                    System.out.println("Move has 2 pieces of disambiguation data: col - " + colDisambig + ", row - " + rowDisambig);
                 }
                 // invalid input
                 else {
@@ -156,12 +152,10 @@ public class ChessGame extends GameState{
                 // is it a column disambiguation input? aka a char between a and h?
                 if ( (ch1>='a') && ( ch1<='h') ) {
                     colDisambig = ch1;
-                    System.out.println("Move has 1 piece of disambiguation data: col - " + colDisambig);
                 }
                 // is it a row disambiguation input? aka a number between 1 and 8?
                 else if ( (ch1>='1') && ( ch1<='8') ) {
                     rowDisambig = c.charAt(0);
-                    System.out.println("Move has 1 piece of disambiguation data: row - " + rowDisambig);
                 }
                 // invalid input
                 else {
@@ -177,6 +171,37 @@ public class ChessGame extends GameState{
             return false;
         }
 
+        String moveChecker = "";
+        if (movingPieceType == ' ')
+        {
+            moveChecker+=("Move info is: " + Character.toString(pawnColumn) + "Pawn");
+        }
+        else {
+            moveChecker+=("Move info is: Piece " + Character.toString(movingPieceType));
+        }
+        if (rowDisambig != '0') {
+            moveChecker+=(" (row " + (rowDisambig) + ")");
+        }
+        if (colDisambig != '0') {
+            moveChecker+=(" (col " + (colDisambig) + ")");
+        }
+        if (captureAttempt) {
+            moveChecker+=(" wants to take a piece on ");
+        }
+        else {
+            moveChecker+=(" wants to move to ");
+        }
+        moveChecker+=(Character.toString(attemptxPos) + Character.toString(attemptyPos));
+        if (attemptCheck) {
+            moveChecker+=(" and check");
+        }
+        else if (attemptCheckmate) {
+            moveChecker+=(" and checkmate");
+        }
+        if (attemptedPawnPromo) {
+            moveChecker+=(" (pawn promotion to " + Character.toString(promoPiece) + ")");
+        }
+        System.out.println(moveChecker);
         // if code as got this far without returning false then the instruction made sense. But is the requested move valid?
         return true;
     }
