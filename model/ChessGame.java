@@ -1,12 +1,16 @@
 package model;
 
+import controller.PGNChessMove;
+
 public class ChessGame extends GameState{
     
-    private Piece[][] board = new Piece[8][8];
+    private Piece[][] board;
     private boolean whitesTurn;
 
+    // constructor - set up the board and pieces
     public ChessGame() {
         this.whitesTurn = true;
+        this.board = new Piece[8][8];
         this.board[0][4] = new King(true);
         this.board[7][4] = new King(false);
     }
@@ -23,186 +27,141 @@ public class ChessGame extends GameState{
     public void nextTurn() {
         whitesTurn = !whitesTurn;
     }
-
-    // row character to int converter
+    /*
+    // returns a corresponding int value for a char row value of a-h (1-8)
     public int columnToInt(char ch) {
         if (ch < 'a' || ch > 'h') {
-            throw new IllegalArgumentException("Character must be in the range 'a' to 'z'");
+            throw new IllegalArgumentException("Character must be in the range 'a' to 'h'");
         }
         return ch - 'a' + 1;
     }
 
-    // attempts to make a move on the board by parsing the inputted PGN command. 
-    // Returns true if the move is succesful, returns false if the move is unsuccesful.
-    public boolean attemptMove(String c) {
-
-        //SPECIAL CASES
-        // castling short
-        if (c.equals("0-0")) {
-            System.out.println("You will castle short :)");
-            return true;
-        }
-        // castling long
-        else if (c.equals("0-0-0")) {
-            System.out.println("You will castle long :)");
-            return true;
-        }
-
-        //normal command parsing
-        char movingPieceType;
-        boolean attemptedPawnPromo = false;
-        char pawnColumn = '0';
-        char promoPiece = '0';
-        boolean captureAttempt = false;
-        char rowDisambig = '0', colDisambig = '0';
-        char attemptxPos, attemptyPos;
-        boolean attemptCheck = false, attemptCheckmate = false;
-
-
+    // extract and validate target xcoord form a PGN move, returns {-1, -1} if invalid
+    public int[] targetCoords(String c) {
         try {
-            // is the move an attempted check or checkmate?
-            if (c.substring(c.length()-1).equals("+")) {
-                // King can't check or checkmate!!
-                if (c.charAt(0) == 'K') {
-                    return false;
-                }
-                if (c.substring(c.length()-2).equals("++")) {
-                    attemptCheckmate = true;
-                    c = c.substring(0, c.length()-2);
-                }
-                else {
-                    attemptCheck = true;
-                    c = c.substring(0, c.length()-1);
-                }
-            }
-
-
-
-            // which type of piece is moving?
-            // is it a pawn
-            var char1 = c.charAt(0);
-            if ('a' <= char1 && 'h' >= char1) {
-                movingPieceType = ' ';
-                pawnColumn = c.charAt(0);
-                // is it a pawn capture? If so, need to take note of the first character which specifies the column of departure and strip it from the command
-                if (c.contains("x")) {
-                    c = c.substring(1, c.length());
-                }
-                // is it a pawn promo attempt?
-                try {
-                    var promoSubstring = c.substring(c.length()-4, c.length());
-                    // check piece promo type and ensure pawn has reached the end of the board
-                    if ( (promoSubstring.equals("8(Q)")) || (promoSubstring.equals("8(R)")) || (promoSubstring.equals("8(N)")) || (promoSubstring.equals("8(B)"))) {
-                        attemptedPawnPromo = true;
-                        promoPiece = promoSubstring.charAt(2);
-                        c = c.substring(0, c.length()-3);
-                    }
-                } catch (Exception e) {}
-            }
-            // if it's not a pawn but a valid piece
-            else if ( char1 == 'K' || char1 == 'Q' || char1 == 'R' || char1 == 'N' || char1 == 'B' ) {
-                movingPieceType = char1;
-                c = c.substring(1, c.length());
-            }
-            // it's an invalid piece
-            else {
-                return false;
-            }
-
-
-            // what's the destination square?
             char ch1 = c.charAt(c.length()-2), ch2 = c.charAt(c.length()-1);
             // are the destination values valid?
             if ( ((ch1>='a') && ( ch1<='h') ) && ((ch2>='1') && ( ch2<='8')) ) {
-                attemptxPos = ch1;
-                attemptyPos = ch2;
-                c = c.substring(0, c.length()-2);
+                int x = columnToInt(ch1);
+                int y = Character.getNumericValue(ch2);
+                return new int[]{x, y};
+            }
+            else { throw new IllegalArgumentException("Last two characters of string are not valid board coordinates"); }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Not enough chars in the string to extract info");
+        }
+    }
+
+
+    // PGN instruction parser - decodes a PGN command from user and returns an object with all decoded information including whether the instruction is valid
+    public PGNChessMove pgnParser(String c) {
+        try {
+            // is it an attempted check or checkmate?
+            boolean check = false;
+            boolean checkmate = false;
+            if (c.charAt(c.length()-1)=='#') {
+                checkmate = true;
+                c = c.substring(0, c.length()-1);
+            }
+            else if (c.charAt(c.length()-1)=='+') {
+                check = true;
+                c = c.substring(0, c.length()-1);
+            }
+
+            // SPECIAL CASES
+            // castling short
+            if (c.equals("0-0-0")) {
+                return new PGNChessMove(false, check, checkmate);
+            }
+            else if (c.equals("0-0")) {
+                return new PGNChessMove(true, check, checkmate);
+            }
+
+            // move info vars
+            char ch0 = c.charAt(0);
+            char movingPieceType;
+            char promoPiece = ' ';
+            boolean cap = false;
+            int[] startPos = new int[]{-1, -1};
+            int[] newPos = new int[]{-1,-1};
+
+            // what is the piece type?
+            // pawn
+            if (ch0>='a' && ch0<='h') {
+                movingPieceType = ' ';
+                startPos[0] = columnToInt(ch0);
+                try {
+                    var temp = c.substring(c.length()-4);
+                    if ( temp.equals("8(Q)") || temp.equals("8(R)") || temp.equals("8(N)") || temp.equals("8(B)") ) {
+                        promoPiece = temp.charAt(2);
+                        c = c.substring(0, c.length()-3);
+                    }
+                    else { promoPiece = ' ';}
+                } catch (Exception e) {
+                    promoPiece = ' ';
+                }
+            }
+            // non pawn
+            else if (ch0 == 'K' || ch0 == 'Q' || ch0 == 'R' || ch0 == 'N' || ch0 == 'B') {
+                movingPieceType = ch0;
+                c = c.substring(1);
+            }
+            // invalid character
+            else {
+                return new PGNChessMove();
+            }
+            // newPos
+            newPos = targetCoords(c);
+            c = c.substring(0, c.length()-2);
+            // any more info?
+            if (c.length() == 0) {
+                return new PGNChessMove(false, movingPieceType, promoPiece, cap, startPos, newPos, check, checkmate);
+            }
+            // capture?
+            if (c.charAt(c.length()-1)=='x') {
+                cap = true;
+                c = c.substring(0, c.length()-1);
+            }
+            // any more info?
+            if (c.length()==0) {
+                return new PGNChessMove(false, movingPieceType, promoPiece, cap, startPos, newPos, check, checkmate);
+            }
+            //disambig co-ords? (for non-pawn/king)
+            if (movingPieceType == 'K') {
+                return new PGNChessMove();
             }
             else {
-                return false;
-            }
-            
-            // is the move a capture?
-            try {
-                if (c.substring(c.length()-1).equals("x")) {
-                    c = c.replace("x", "");
-                    captureAttempt = true;
+                // 2 disambigs
+                if (c.length() == 2) {
+                    System.out.println("c is now " + c);
+                    startPos = targetCoords(c);
                 }
-            } catch (Exception e) {}
-
-
-            // are there any disambiguation inputs?
-            // 2 disambig inputs - must be queen!!
-            if ((c.length() == 2) && (movingPieceType == 'Q')) {
-                ch1 = c.charAt(0);
-                ch2 = c.charAt(1);
-                // are the disambiguation values valid?
-                if ( ((ch1>='a') && ( ch1<='h') ) && ((ch2>='1') && ( ch2<='8')) ) {
-                    colDisambig = ch1;
-                    rowDisambig = ch2;
+                // 1 disambig
+                else if (c.length() == 1) {
+                    ch0 = c.charAt(0);
+                    int temp = Character.getNumericValue(ch0);
+                    if (ch0>='a' && ch0<='h'){
+                        startPos[0] = columnToInt(c.charAt(0));
+                    }
+                    else if ( temp>=1 && temp<=8 ) {
+                        startPos[1] = temp;
+                    }
+                    else {
+                        return new PGNChessMove();
+                    }
                 }
-                // invalid input
+                // anything else is invalid
                 else {
-                    return false;
+                    return new PGNChessMove();
                 }
             }
-            // 1 disambiguation input - code will only reach here if movingPieceType != ' ' aka not a pawn
-            else if (c.length() == 1 && movingPieceType !='K') {
-                ch1 = c.charAt(0);
-                // is it a column disambiguation input? aka a char between a and h?
-                if ( (ch1>='a') && ( ch1<='h') ) {
-                    colDisambig = ch1;
-                }
-                // is it a row disambiguation input? aka a number between 1 and 8?
-                else if ( (ch1>='1') && ( ch1<='8') ) {
-                    rowDisambig = c.charAt(0);
-                }
-                // invalid input
-                else {
-                    return false;
-                }
-            }
-            // more than two chars long in which case, instruction was invalid
-            else if (c.length() != 0) {
-                return false;
-            }
-
-        } catch (Exception e) {
-            return false;
+            // return all the info :)
+            return new PGNChessMove(false, movingPieceType, promoPiece, cap, startPos, newPos, check, checkmate);
         }
-
-        String moveChecker = "";
-        if (movingPieceType == ' ')
-        {
-            moveChecker+=("Move info is: " + Character.toString(pawnColumn) + "Pawn");
+        // any error indicates an invalid command 
+        catch (Exception e) {
+            return new PGNChessMove();
         }
-        else {
-            moveChecker+=("Move info is: Piece " + Character.toString(movingPieceType));
-        }
-        if (rowDisambig != '0') {
-            moveChecker+=(" (row " + (rowDisambig) + ")");
-        }
-        if (colDisambig != '0') {
-            moveChecker+=(" (col " + (colDisambig) + ")");
-        }
-        if (captureAttempt) {
-            moveChecker+=(" wants to take a piece on ");
-        }
-        else {
-            moveChecker+=(" wants to move to ");
-        }
-        moveChecker+=(Character.toString(attemptxPos) + Character.toString(attemptyPos));
-        if (attemptCheck) {
-            moveChecker+=(" and check");
-        }
-        else if (attemptCheckmate) {
-            moveChecker+=(" and checkmate");
-        }
-        if (attemptedPawnPromo) {
-            moveChecker+=(" (pawn promotion to " + Character.toString(promoPiece) + ")");
-        }
-        System.out.println(moveChecker);
-        // if code as got this far without returning false then the instruction made sense. But is the requested move valid?
-        return true;
     }
+    */
 }
