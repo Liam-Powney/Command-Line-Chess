@@ -19,4 +19,8 @@ public class Game {
         gamestateStack.add(new ChessGame());
     }
 
+    public void popGamestateStack() {
+        gamestateStack.removeLast();
+    }
+
 }

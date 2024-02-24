@@ -154,6 +154,9 @@ public class ChessGame extends GameState{
 
     // attempt a PGN move checking against game logic
     public boolean attemptMove(PGNChessMove m) {
+        if (!m.isValidMove()) {
+            return false;
+        }
         if (possPieces(m).size()!=1) {
             return false;
         }

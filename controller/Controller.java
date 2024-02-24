@@ -29,7 +29,7 @@ public class Controller {
                     System.out.println("Not implemented yet, please choose something else :)");
                     break;
                 case "help":
-                    System.out.println("Not implemented yet, please choose something else :)");
+                    System.out.println("When in a game, use command 'quit' to return to the main menu :)");
                     break;
                 default:
                     System.out.println("Command not recognised. Enter 'help' for assistance.");
@@ -40,6 +40,11 @@ public class Controller {
         if (cs instanceof ChessGame) {
             var cg = (ChessGame) cs;
             // parse command
+            if (command.equals("quit")) {
+                System.out.println("Quitting game and tkaing you to the main menu...");
+                game.popGamestateStack();
+                return;
+            }
             PGNChessMove move = pgnParser(command);
             move.printMoveInfo();
             cg.attemptMove(move);
