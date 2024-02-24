@@ -26,10 +26,10 @@ public class Controller {
                     game.pushChessGame();
                     break;
                 case "2":
-
+                    System.out.println("Not implemented yet, please choose something else :)");
                     break;
                 case "help":
-
+                    System.out.println("Not implemented yet, please choose something else :)");
                     break;
                 default:
                     System.out.println("Command not recognised. Enter 'help' for assistance.");
@@ -39,11 +39,11 @@ public class Controller {
  
         if (cs instanceof ChessGame) {
             var cg = (ChessGame) cs;
-
+            // parse command
             PGNChessMove move = pgnParser(command);
             move.printMoveInfo();
-
-            
+            cg.attemptMove(move);
+            System.out.println("Whites move = " + String.valueOf(cg.getWhitesTurn()) + ", value of bool attemptMove() = " + String.valueOf(cg.attemptMove(move)));
         }
     }
 
@@ -54,25 +54,27 @@ public class Controller {
     }
 
 
+
+
     //
     // FUNCTIONS THAT PARSE PGN NOTATION
     //
-    // returns a corresponding int value for a char row value of a-h (1-8)
+    // returns a corresponding int value for a char row value of a-h (0-7)
     public int columnToInt(char ch) {
         if (ch < 'a' || ch > 'h') {
             throw new IllegalArgumentException("Character must be in the range 'a' to 'h'");
         }
-        return ch - 'a' + 1;
+        return ch - 'a';
     }
 
-    // extract and validate target xcoord form a PGN move, returns {-1, -1} if invalid
+    // extract and validate target coords from a PGN move, returns {-1, -1} if invalid
     public int[] targetCoords(String c) {
         try {
             char ch1 = c.charAt(c.length()-2), ch2 = c.charAt(c.length()-1);
             // are the destination values valid?
             if ( ((ch1>='a') && ( ch1<='h') ) && ((ch2>='1') && ( ch2<='8')) ) {
                 int x = columnToInt(ch1);
-                int y = Character.getNumericValue(ch2);
+                int y = Character.getNumericValue(ch2)-1;
                 return new int[]{x, y};
             }
             else { throw new IllegalArgumentException("Last two characters of string are not valid board coordinates"); }
@@ -115,7 +117,7 @@ public class Controller {
             // what is the piece type?
             // pawn
             if (ch0>='a' && ch0<='h') {
-                movingPieceType = ' ';
+                movingPieceType = 'p';
                 startPos[0] = columnToInt(ch0);
                 try {
                     var temp = c.substring(c.length()-4);
@@ -166,11 +168,11 @@ public class Controller {
                 // 1 disambig
                 else if (c.length() == 1) {
                     ch0 = c.charAt(0);
-                    int temp = Character.getNumericValue(ch0);
+                    int temp = Character.getNumericValue(ch0)-1;
                     if (ch0>='a' && ch0<='h'){
                         startPos[0] = columnToInt(c.charAt(0));
                     }
-                    else if ( temp>=1 && temp<=8 ) {
+                    else if ( temp>=0 && temp<=7 ) {
                         startPos[1] = temp;
                     }
                     else {

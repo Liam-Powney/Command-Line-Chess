@@ -11,6 +11,7 @@ public abstract class Piece {
     }
 
     public abstract char getPieceChar();
+    public abstract int[][][] getMoves();
 
     public boolean getWhite() {
         return white;

@@ -2,25 +2,37 @@ package model;
 
 public class Pawn extends Piece{
     
-    private final char pieceChar = ' ';
-    private final int[][] moves = { };
+    private final static char pieceChar = 'p';
+    private final int[][][] moves;
     private boolean hasMoved;
     
     public Pawn(boolean white) {
         super(white);
         this.hasMoved = false;
+        if (white) {
+            this.moves = new int[][][] {    
+                                            // forwards (including double move)                        
+                                            {{0, 1}, {0, 2}},
+                                            // taking moves
+                                            {{1, 1}, {-1, 1}}};
+        }
+        else {
+            this.moves = new int[][][] {    
+                                            // forwards (including double move)                        
+                                            {{0, -1}, {0, -2}},
+                                            // taking moves
+                                            {{1,-1}, {-1,-1}}};
+        }
     }
 
     @Override
-    public char getPieceChar() {
-        return pieceChar;
-    }
+    public char getPieceChar() {return pieceChar;}
 
-    public boolean getHasMoved() {
-        return hasMoved;
-    }
+    public boolean getHasMoved() {return hasMoved;}
+    public void setHasMoved() {hasMoved = true;}
+    @Override
+    public int[][][] getMoves() { return moves;}
 
-    public void setHasMoved() {
-        hasMoved = true;
-    }
+
+
 }

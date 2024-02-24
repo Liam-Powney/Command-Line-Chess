@@ -1,5 +1,7 @@
 package model;
 
+import java.util.ArrayList;
+
 import controller.PGNChessMove;
 
 public class ChessGame extends GameState{
@@ -11,8 +13,40 @@ public class ChessGame extends GameState{
     public ChessGame() {
         this.whitesTurn = true;
         this.board = new Piece[8][8];
-        this.board[0][4] = new King(true);
-        this.board[7][4] = new King(false);
+        // white pieces
+        this.board[0][0] = new Rook(true);
+        this.board[0][1] = new Knight(true);
+        this.board[0][2] = new Bishop(true);
+        this.board[0][3] = new King(true);
+        this.board[0][4] = new Queen(true);
+        this.board[0][5] = new Bishop(true);
+        this.board[0][6] = new Knight(true);
+        this.board[0][7] = new Rook(true);
+        /*this.board[1][0] = new Pawn(true);
+        this.board[1][1] = new Pawn(true);
+        this.board[1][2] = new Pawn(true);
+        this.board[1][3] = new Pawn(true);
+        this.board[1][4] = new Pawn(true);
+        this.board[1][5] = new Pawn(true);
+        this.board[1][6] = new Pawn(true);
+        this.board[1][7] = new Pawn(true); */
+        // black pieces
+        this.board[7][0] = new Rook(false);
+        this.board[7][1] = new Knight(false);
+        this.board[7][2] = new Bishop(false);
+        this.board[7][3] = new King(false);
+        this.board[7][4] = new Queen(false);
+        this.board[7][5] = new Bishop(false);
+        this.board[7][6] = new Knight(false);
+        this.board[7][7] = new Rook(false);
+        /*this.board[6][0] = new Pawn(false);
+        this.board[6][1] = new Pawn(false);
+        this.board[6][2] = new Pawn(false);
+        this.board[6][3] = new Pawn(false);
+        this.board[6][4] = new Pawn(false);
+        this.board[6][5] = new Pawn(false);
+        this.board[6][6] = new Pawn(false);
+        this.board[6][7] = new Pawn(false); */
     }
 
     public Piece[][] getBoard() {
@@ -27,141 +61,117 @@ public class ChessGame extends GameState{
     public void nextTurn() {
         whitesTurn = !whitesTurn;
     }
-    /*
-    // returns a corresponding int value for a char row value of a-h (1-8)
-    public int columnToInt(char ch) {
-        if (ch < 'a' || ch > 'h') {
-            throw new IllegalArgumentException("Character must be in the range 'a' to 'h'");
+
+    // finds all the possible pieces that can move to the target square for a given PGN move decoded by the controller
+    public ArrayList<Piece> possPieces(PGNChessMove m) {
+        ArrayList<Piece> out = new ArrayList<Piece>();
+        // start pos known
+        int startCol = m.startPos()[0];
+        int startRow = m.startPos()[1];
+
+        for (int squareRow=0; squareRow<8; squareRow++) {
+            for (int squareCol=0; squareCol<8; squareCol++) {
+                // search columns and rows only that we need to given any disambig data present in the PGNMove
+                if ( (startCol == -1 || squareCol == startCol) && (startRow == -1 || squareRow == startRow) ) {
+                    Piece square = board[squareRow][squareCol];
+                    if (square==null) {continue;}
+                    if (square.getPieceChar()==m.movingPieceType() && square.getWhite()==whitesTurn && isPieceMovePossible(squareCol, squareRow, m)) {
+                        out.add(square);
+                    }
+                }
+            }
         }
-        return ch - 'a' + 1;
+        return out;
     }
 
-    // extract and validate target xcoord form a PGN move, returns {-1, -1} if invalid
-    public int[] targetCoords(String c) {
-        try {
-            char ch1 = c.charAt(c.length()-2), ch2 = c.charAt(c.length()-1);
-            // are the destination values valid?
-            if ( ((ch1>='a') && ( ch1<='h') ) && ((ch2>='1') && ( ch2<='8')) ) {
-                int x = columnToInt(ch1);
-                int y = Character.getNumericValue(ch2);
-                return new int[]{x, y};
+
+    // can a piece move to the target square given the current board?
+    public boolean isPieceMovePossible(int startCol, int startRow, PGNChessMove m) {
+
+        // current piece we are working with
+        Piece p = board[startRow][startCol];
+        int[] moveVec = new int[] {m.endPos()[0]-startCol, m.endPos()[1]-startRow};
+
+        // is it a pawn?
+        if (m.movingPieceType() == 'p') {
+            System.out.println("I haven't implemented pawn moves yet :)");
+            return false;
+        }
+        // any other piece
+        else {
+
+            // for each direction the piece can move
+            for (int[][] direction : p.getMoves()) {
+                // for each increment in that direction
+                for (int[] possiblePieceVec : direction) {
+
+                    // keep indicies in bounds - omits possible moves that would send the piece off the board :)
+                    try {
+
+                        // if the current square that the piece move in the current direction corresponds to ISNT the target square of the move
+                        if ( startCol+possiblePieceVec[0] != m.endPos()[0] || startRow+possiblePieceVec[1] != m.endPos()[1]) {
+                            Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
+                            // if that square is empty - continue in the direction
+                            if (square==null) {
+                                continue;
+                            }
+                            // otherwise - go to the next direction
+                            else {
+                                break;
+                            }
+                        }
+                         // if the current square that the piece move in the current direction corresponds to IS the target square of the move
+                        else {
+                            /// if square empty and move - true
+                            Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
+                            if (square==null && !m.captureAttempt() && !checkChecker(board[startRow][startCol], m, true)) {
+                                return true;
+                            }
+                            ///else if enemy piece and capture - true
+                            else if ( square.getWhite()!=whitesTurn && m.captureAttempt() && !checkChecker(board[startRow][startCol], m, true)) {
+                                return true;
+                            }
+                            /// otherwise the move isn't possible 
+                            else {
+                                System.out.println("The piece can't go to the target square specified. Please check to make sure the square is empty, or you correctly specified a capture attempt.");
+                                return false;
+                            }
+                        }
+                    }
+                    catch (Exception e) {
+                        break;
+                    }
+                }
             }
-            else { throw new IllegalArgumentException("Last two characters of string are not valid board coordinates"); }
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Not enough chars in the string to extract info");
+        }
+        return false;
+    }
+
+    // check checker - does a move leave the player in check? returns true if king is in check, bool 'myKing' is true if checking same colour king as whose turn it is, false if enemy king
+    public boolean checkChecker(Piece p, PGNChessMove m, boolean myKing) {
+        return false;
+    }
+
+    // attempt a PGN move checking against game logic
+    public boolean attemptMove(PGNChessMove m) {
+        if (possPieces(m).size()!=1) {
+            return false;
+        }
+        else {
+            Piece p = possPieces(m).get(0);
+            Outer:
+            for (int row=0; row<8; row++) {
+                for (int col=0; col<8; col++) {
+                    if (board[row][col] != null && board[row][col] == p) {
+                        board[row][col] = null;
+                        break Outer;
+                    }
+                }
+            }
+            board[m.endPos()[1]][m.endPos()[0]] = p;
+            nextTurn();
+            return true;
         }
     }
 
-
-    // PGN instruction parser - decodes a PGN command from user and returns an object with all decoded information including whether the instruction is valid
-    public PGNChessMove pgnParser(String c) {
-        try {
-            // is it an attempted check or checkmate?
-            boolean check = false;
-            boolean checkmate = false;
-            if (c.charAt(c.length()-1)=='#') {
-                checkmate = true;
-                c = c.substring(0, c.length()-1);
-            }
-            else if (c.charAt(c.length()-1)=='+') {
-                check = true;
-                c = c.substring(0, c.length()-1);
-            }
-
-            // SPECIAL CASES
-            // castling short
-            if (c.equals("0-0-0")) {
-                return new PGNChessMove(false, check, checkmate);
-            }
-            else if (c.equals("0-0")) {
-                return new PGNChessMove(true, check, checkmate);
-            }
-
-            // move info vars
-            char ch0 = c.charAt(0);
-            char movingPieceType;
-            char promoPiece = ' ';
-            boolean cap = false;
-            int[] startPos = new int[]{-1, -1};
-            int[] newPos = new int[]{-1,-1};
-
-            // what is the piece type?
-            // pawn
-            if (ch0>='a' && ch0<='h') {
-                movingPieceType = ' ';
-                startPos[0] = columnToInt(ch0);
-                try {
-                    var temp = c.substring(c.length()-4);
-                    if ( temp.equals("8(Q)") || temp.equals("8(R)") || temp.equals("8(N)") || temp.equals("8(B)") ) {
-                        promoPiece = temp.charAt(2);
-                        c = c.substring(0, c.length()-3);
-                    }
-                    else { promoPiece = ' ';}
-                } catch (Exception e) {
-                    promoPiece = ' ';
-                }
-            }
-            // non pawn
-            else if (ch0 == 'K' || ch0 == 'Q' || ch0 == 'R' || ch0 == 'N' || ch0 == 'B') {
-                movingPieceType = ch0;
-                c = c.substring(1);
-            }
-            // invalid character
-            else {
-                return new PGNChessMove();
-            }
-            // newPos
-            newPos = targetCoords(c);
-            c = c.substring(0, c.length()-2);
-            // any more info?
-            if (c.length() == 0) {
-                return new PGNChessMove(false, movingPieceType, promoPiece, cap, startPos, newPos, check, checkmate);
-            }
-            // capture?
-            if (c.charAt(c.length()-1)=='x') {
-                cap = true;
-                c = c.substring(0, c.length()-1);
-            }
-            // any more info?
-            if (c.length()==0) {
-                return new PGNChessMove(false, movingPieceType, promoPiece, cap, startPos, newPos, check, checkmate);
-            }
-            //disambig co-ords? (for non-pawn/king)
-            if (movingPieceType == 'K') {
-                return new PGNChessMove();
-            }
-            else {
-                // 2 disambigs
-                if (c.length() == 2) {
-                    System.out.println("c is now " + c);
-                    startPos = targetCoords(c);
-                }
-                // 1 disambig
-                else if (c.length() == 1) {
-                    ch0 = c.charAt(0);
-                    int temp = Character.getNumericValue(ch0);
-                    if (ch0>='a' && ch0<='h'){
-                        startPos[0] = columnToInt(c.charAt(0));
-                    }
-                    else if ( temp>=1 && temp<=8 ) {
-                        startPos[1] = temp;
-                    }
-                    else {
-                        return new PGNChessMove();
-                    }
-                }
-                // anything else is invalid
-                else {
-                    return new PGNChessMove();
-                }
-            }
-            // return all the info :)
-            return new PGNChessMove(false, movingPieceType, promoPiece, cap, startPos, newPos, check, checkmate);
-        }
-        // any error indicates an invalid command 
-        catch (Exception e) {
-            return new PGNChessMove();
-        }
-    }
-    */
 }
