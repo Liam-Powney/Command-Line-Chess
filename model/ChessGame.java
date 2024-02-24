@@ -154,10 +154,13 @@ public class ChessGame extends GameState{
 
     // attempt a PGN move checking against game logic
     public boolean attemptMove(PGNChessMove m) {
-        if (!m.isValidMove()) {
+        ArrayList<Piece> possP = possPieces(m);
+        if (possPieces(m).size()>1) {
+            System.out.println("There are multiple pieces that can perform that move. Please make use of disambiguation information.");
             return false;
         }
-        if (possPieces(m).size()!=1) {
+        else if(possP.size()==0) {
+            System.out.println("None of your pieces can perform that move. Please check your input.");
             return false;
         }
         else {

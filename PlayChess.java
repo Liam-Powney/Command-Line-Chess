@@ -24,7 +24,7 @@ public class PlayChess {
             // request new command
             System.out.print("CH> ");
             // process command
-            String input = scanner.nextLine();
+            String input = scanner.nextLine().trim();
             if (input.equalsIgnoreCase("exit")) {
                 System.out.println("Thanks for playing :) Bye!");
                 return;

@@ -46,9 +46,13 @@ public class Controller {
                 return;
             }
             PGNChessMove move = pgnParser(command);
-            move.printMoveInfo();
-            cg.attemptMove(move);
-            System.out.println("Whites move = " + String.valueOf(cg.getWhitesTurn()) + ", value of bool attemptMove() = " + String.valueOf(cg.attemptMove(move)));
+            //move.printMoveInfo();
+            if (move.isValidMove()) {
+                cg.attemptMove(move);
+            }
+            else {
+                System.out.println("Move invalid");
+            }
         }
     }
 
