@@ -40,7 +40,7 @@ public class Controller {
         if (cs instanceof ChessGame) {
             var cg = (ChessGame) cs;
             // parse command
-            if (command.equals("quit")) {
+            if (command.equalsIgnoreCase("quit")) {
                 System.out.println("Quitting game and tkaing you to the main menu...");
                 game.popGamestateStack();
                 return;

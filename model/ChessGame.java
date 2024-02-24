@@ -22,14 +22,14 @@ public class ChessGame extends GameState{
         this.board[0][5] = new Bishop(true);
         this.board[0][6] = new Knight(true);
         this.board[0][7] = new Rook(true);
-        /*this.board[1][0] = new Pawn(true);
+        this.board[1][0] = new Pawn(true);
         this.board[1][1] = new Pawn(true);
         this.board[1][2] = new Pawn(true);
         this.board[1][3] = new Pawn(true);
         this.board[1][4] = new Pawn(true);
         this.board[1][5] = new Pawn(true);
         this.board[1][6] = new Pawn(true);
-        this.board[1][7] = new Pawn(true); */
+        this.board[1][7] = new Pawn(true);
         // black pieces
         this.board[7][0] = new Rook(false);
         this.board[7][1] = new Knight(false);
@@ -39,14 +39,14 @@ public class ChessGame extends GameState{
         this.board[7][5] = new Bishop(false);
         this.board[7][6] = new Knight(false);
         this.board[7][7] = new Rook(false);
-        /*this.board[6][0] = new Pawn(false);
+        this.board[6][0] = new Pawn(false);
         this.board[6][1] = new Pawn(false);
         this.board[6][2] = new Pawn(false);
         this.board[6][3] = new Pawn(false);
         this.board[6][4] = new Pawn(false);
         this.board[6][5] = new Pawn(false);
         this.board[6][6] = new Pawn(false);
-        this.board[6][7] = new Pawn(false); */
+        this.board[6][7] = new Pawn(false);
     }
 
     public Piece[][] getBoard() {
@@ -90,16 +90,86 @@ public class ChessGame extends GameState{
 
         // current piece we are working with
         Piece p = board[startRow][startCol];
-        int[] moveVec = new int[] {m.endPos()[0]-startCol, m.endPos()[1]-startRow};
+        //int[] moveVec = new int[] {m.endPos()[0]-startCol, m.endPos()[1]-startRow};
 
         // is it a pawn?
         if (m.movingPieceType() == 'p') {
-            System.out.println("I haven't implemented pawn moves yet :)");
-            return false;
+            
+            // is it a move aka not a capture?
+            if (!m.captureAttempt()) {
+                /// has the pawn not moved yet? (check all of forward direction moves)
+                if (!p.getHasMoved()) {
+                    for (int[] possiblePieceVec : p.getMoves()[0]) {
+                        Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
+                        // if the square isn't the target square
+                        if ( startCol+possiblePieceVec[0] != m.endPos()[0] || startRow+possiblePieceVec[1] != m.endPos()[1]) {
+                            // if the square is empty
+                            if (square==null) {
+                                continue;
+                            }
+                            // if the square is taken
+                            else {
+                                break;
+                            }
+                        }
+                        // if the square is the target square
+                        else {
+                            // if the square is empty and the move won't leave player in check
+                            if (square==null && !checkChecker(board[startRow][startCol], m, true)) {
+                                return true;
+                            }
+                            else {
+                                System.out.println("Pawn can't go to the target square specified. Please check to make sure the square is empty, or the move doesn't leave you in check.");
+                                break;
+                            }
+                        }
+                    }
+                }
+                /// else - (just check first forward direction move)
+                else {
+                    int[] possiblePieceVec = p.getMoves()[0][0];
+                    Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
+                    // is it the target square?
+                    if (startCol+possiblePieceVec[0] == m.endPos()[0] && startRow+possiblePieceVec[1] == m.endPos()[1] ){
+                        // if the square is empty and the move won't leave player in check
+                        if (square==null && !checkChecker(board[startRow][startCol], m, true)) {
+                            return true;
+                        }
+                        else {
+                            System.out.println("Pawn can't go to the target square specified. Please check to make sure the square is empty, or the move doesn't leave you in check.");
+                        }
+                    }
+                    // not the target square
+                    else {
+                        System.out.println("Pawn can't go to the target square specified.");
+                    }
+                }
+            }
+            // is it a capture?
+            else {
+                /// check taking 'direction' (only two non linear moves)
+                for (int[] possiblePieceVec : p.getMoves()[1]) {
+                    Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
+                    // if the square isn't the target square
+                    if ( startCol+possiblePieceVec[0] != m.endPos()[0] || startRow+possiblePieceVec[1] != m.endPos()[1]) {
+                        continue;
+                    }
+                    // if it is the target square
+                    else {
+                        // make sure it's got a piece of opposite colour on and the move won't leave the player in check!
+                        if (square!=null && square.getWhite()!=whitesTurn && !checkChecker(board[startRow][startCol], m, true)) {
+                            return true;
+                        }
+                        else {
+                            System.out.println("Can't make that pawn capture. Please ensure there is an enemy piece on target square and that the move won't leave you in check");
+                        }
+                    }
+                }
+            }
         }
         // any other piece
         else {
-
+            Outer:
             // for each direction the piece can move
             for (int[][] direction : p.getMoves()) {
                 // for each increment in that direction
@@ -134,7 +204,7 @@ public class ChessGame extends GameState{
                             /// otherwise the move isn't possible 
                             else {
                                 System.out.println("The piece can't go to the target square specified. Please check to make sure the square is empty, or you correctly specified a capture attempt.");
-                                return false;
+                                break Outer;
                             }
                         }
                     }
@@ -175,6 +245,7 @@ public class ChessGame extends GameState{
                 }
             }
             board[m.endPos()[1]][m.endPos()[0]] = p;
+            p.setMoved();
             nextTurn();
             return true;
         }

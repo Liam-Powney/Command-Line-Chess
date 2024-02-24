@@ -3,7 +3,7 @@ package model;
 public class Knight extends Piece{
 
     private final char pieceChar = 'N';
-    private final static int[][][] moves = {{{ 2, 1}},
+    private final int[][][] moves = {{{ 2, 1}},
                                             {{-2, 1}},
                                             {{ 2,-1}},
                                             {{-2,-1}},
