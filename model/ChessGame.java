@@ -84,7 +84,6 @@ public class ChessGame extends GameState{
         return out;
     }
 
-
     // can a piece move to the target square given the current board?
     public boolean isPieceMovePossible(int startCol, int startRow, PGNChessMove m) {
 
@@ -225,7 +224,7 @@ public class ChessGame extends GameState{
     // attempt a PGN move checking against game logic
     public boolean attemptMove(PGNChessMove m) {
         ArrayList<Piece> possP = possPieces(m);
-        if (possPieces(m).size()>1) {
+        if (possP.size()>1) {
             System.out.println("There are multiple pieces that can perform that move. Please make use of disambiguation information.");
             return false;
         }
@@ -234,7 +233,7 @@ public class ChessGame extends GameState{
             return false;
         }
         else {
-            Piece p = possPieces(m).get(0);
+            Piece p = possP.get(0);
             Outer:
             for (int row=0; row<8; row++) {
                 for (int col=0; col<8; col++) {
