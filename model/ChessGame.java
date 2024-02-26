@@ -89,6 +89,7 @@ public class ChessGame extends GameState{
     public void performMove(Move m) {
         board[m.getEndRow()][m.getEndCol()] = m.getPiece();
         board[m.getStartRow()][m.getStartCol()] = null;
+        m.getPiece().setMoved();
         nextTurn();
     }
 
@@ -114,7 +115,7 @@ public class ChessGame extends GameState{
                     break;
                 }
                 // if the current square is NOT the target square 
-                if (currentSquare!=board[m.getEndRow()][m.getEndCol()]) {
+                if ( m.getStartCol()+possibleVec[0]!=m.getEndCol() || m.getStartRow()+possibleVec[1]!=m.getEndRow() ) {
                     // if it's empty, continue in the current direction
                     if (currentSquare==null) {
                         // make sure pawn can't move forwards 2 spaces if it's already moved
@@ -140,7 +141,7 @@ public class ChessGame extends GameState{
                     //piece is a pawn
                     else {
                         //if the square is either 1. empty and the pawn is moving forwards, or 2. the square is taken and the pawn is moving diagonally 
-                        if ((currentSquare==null && i==0) || (currentSquare.getWhite()!=m.getPiece().getWhite() && i==1)) {
+                        if ((currentSquare==null && i==0) || (currentSquare!=null && i==1 && currentSquare.getWhite()!=m.getPiece().getWhite())) {
                             return true;
                         }
                         else {return false;}

@@ -3,7 +3,7 @@ import model.Game;
 import view.CommandLineView;
 import java.util.Scanner;
 
-public class PlayChess {
+public class Main {
     
     public static void main(String[] args) {
         
@@ -19,12 +19,12 @@ public class PlayChess {
 
         // main game loop
         while(true) {
-            // print the game
-            controller.printGame();
+            // draw the game
+            view.draw(game.getLastState());
             // request new command
             System.out.print("CH> ");
-            // process command
             String input = scanner.nextLine().trim();
+            // process command
             if (input.equalsIgnoreCase("exit")) {
                 System.out.println("Thanks for playing :) Bye!");
                 return;

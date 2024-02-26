@@ -19,8 +19,19 @@ public class CommandLineView {
         spriteMap.put("pawn", 'p');
     }
 
+    public void draw(GameState gs) {
+        clearScreen();
+        if (gs instanceof WelcomeScreen) {drawWelcomeScreen((WelcomeScreen)gs);}
+        else if (gs instanceof ChessGame) {drawChessGame((ChessGame)gs);}
+    }
+
     public void drawWelcomeScreen(WelcomeScreen w) {
-        System.out.println("Welcome to command line chess :) Please choose from the following options:\n1 - New Game\n2 - Input Game History\n\nFor more information, please type 'help'\n");
+        System.out.println("Welcome to command line chess :) Please choose from the following options:\n" +
+                                "1 - New Game\n" +
+                                "2 - Input Game History\n" +
+                                "\n" +
+                                "For more information, please type 'help'\n");
+        if (w.getErrorMessage().length()>0) {System.out.println(w.getErrorMessage());}
     }
 
     public void drawChessGame(ChessGame cg) {
@@ -47,7 +58,14 @@ public class CommandLineView {
             }
         }
         outString+="\n    a  b  c  d  e  f  g  h";
+
         System.out.println(outString);
+        if (cg.getErrorMessage().length()>0) {System.out.println(cg.getErrorMessage());}
+    }
+
+    public void clearScreen() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
     }
 }
     

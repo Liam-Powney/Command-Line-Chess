@@ -32,7 +32,7 @@ public class Controller {
                     System.out.println("When in a game, use command 'quit' to return to the main menu :)");
                     break;
                 default:
-                    System.out.println("Command not recognised. Enter 'help' for assistance.");
+                    game.getLastState().setErrorMessage("Command not recognised. Enter 'help' for assistance.");
                     break;
             }
         }
@@ -49,20 +49,19 @@ public class Controller {
             try {
                 m = moveParser(command);
             } catch (Exception e) {
-                System.out.println("Move invalid");
+                cg.setErrorMessage("Move invalid");
                 return;
             }
             m = cg.findPiece(m);
             if (m.getPiece()==null) {
-                System.out.println("I couldn't find that piece!");
+                cg.setErrorMessage("There are either no pieces or multiple pieces that can make that move");
                 return;
             }
             if (cg.isMovePossible(m)) {
                 cg.performMove(m);
                 return;
             }
-            System.out.println("Move not possible.");
-
+            cg.setErrorMessage("Move not possible.");
         }
     }
 
