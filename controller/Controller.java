@@ -45,21 +45,33 @@ public class Controller {
                 game.popGamestateStack();
                 return;
             }
-            PGNChessMove move = pgnParser(command);
-            //move.printMoveInfo();
-            if (move.isValidMove()) {
-                cg.attemptMove(move);
-            }
-            else {
+            Move m;
+            try {
+                m = moveParser(command);
+            } catch (Exception e) {
                 System.out.println("Move invalid");
+                return;
             }
+            m = cg.findPiece(m);
+            if (m.getPiece()==null) {
+                System.out.println("I couldn't find that piece!");
+                return;
+            }
+            if (cg.isMovePossible(m)) {
+                cg.performMove(m);
+                return;
+            }
+            System.out.println("Move not possible.");
+
         }
     }
 
     // contact view to print the game to screen
     public void printGame() {
-        var gs = game.getLastState();
-        view.print(gs);
+        GameState gs = game.getLastState();
+        if (gs instanceof WelcomeScreen) {view.drawWelcomeScreen((WelcomeScreen)gs);}
+        else if(gs instanceof ChessGame) {view.drawChessGame((ChessGame)gs);}
+        else {System.out.println("No draw method for this gamestate :(");}
     }
 
 
@@ -76,7 +88,7 @@ public class Controller {
         return ch - 'a';
     }
 
-    // extract and validate target coords from a PGN move, returns {-1, -1} if invalid
+    // converts the last two chars in a string into square co-ordinates if they are valid inputs, returns {-1, -1} if invalid
     public int[] targetCoords(String c) {
         try {
             char ch1 = c.charAt(c.length()-2), ch2 = c.charAt(c.length()-1);
@@ -91,115 +103,124 @@ public class Controller {
             throw new IllegalArgumentException("Not enough chars in the string to extract info");
         }
     }
-    // PGN instruction parser - decodes a PGN command from user and returns an object with all decoded information including whether the instruction is valid
-    public PGNChessMove pgnParser(String c) {
-        try {
-            // is it an attempted check or checkmate?
-            boolean check = false;
-            boolean checkmate = false;
-            if (c.charAt(c.length()-1)=='#') {
-                checkmate = true;
-                c = c.substring(0, c.length()-1);
-            }
-            else if (c.charAt(c.length()-1)=='+') {
-                check = true;
-                c = c.substring(0, c.length()-1);
-            }
 
-            // SPECIAL CASES
-            // castling short
-            if (c.equals("0-0-0")) {
-                return new PGNChessMove(false, check, checkmate);
-            }
-            else if (c.equals("0-0")) {
-                return new PGNChessMove(true, check, checkmate);
-            }
+    // converts a command into a Move if possible
+    public Move moveParser(String c) {
+        
+        Move m;
 
-            // move info vars
-            char ch0 = c.charAt(0);
-            char movingPieceType;
-            char promoPiece = ' ';
-            boolean cap = false;
-            int[] startPos = new int[]{-1, -1};
-            int[] newPos = new int[]{-1,-1};
+        String pieceType="";
+        int startCol=-1;
+        int startRow=-1;
+        int endCol;
+        int endRow;
+        boolean capture=false;;
+        boolean check=false, checkmate=false;
+        boolean pawnPromo=false;
+        String promoPieceType="";
 
-            // what is the piece type?
-            // pawn
-            if (ch0>='a' && ch0<='h') {
-                movingPieceType = 'p';
-                startPos[0] = columnToInt(ch0);
-                try {
-                    var temp = c.substring(c.length()-4);
-                    if ( temp.equals("8(Q)") || temp.equals("8(R)") || temp.equals("8(N)") || temp.equals("8(B)") ) {
-                        promoPiece = temp.charAt(2);
-                        c = c.substring(0, c.length()-3);
-                    }
-                    else { promoPiece = ' ';}
-                } catch (Exception e) {
-                    promoPiece = ' ';
-                }
-            }
-            // non pawn
-            else if (ch0 == 'K' || ch0 == 'Q' || ch0 == 'R' || ch0 == 'N' || ch0 == 'B') {
-                movingPieceType = ch0;
-                c = c.substring(1);
-            }
-            // invalid character
-            else {
-                return new PGNChessMove();
-            }
-            // newPos
-            newPos = targetCoords(c);
-            c = c.substring(0, c.length()-2);
-            // any more info?
-            if (c.length() == 0) {
-                return new PGNChessMove(false, movingPieceType, promoPiece, cap, startPos, newPos, check, checkmate);
-            }
-            // capture?
-            if (c.charAt(c.length()-1)=='x') {
-                cap = true;
-                c = c.substring(0, c.length()-1);
-            }
-            // any more info?
-            if (c.length()==0) {
-                return new PGNChessMove(false, movingPieceType, promoPiece, cap, startPos, newPos, check, checkmate);
-            }
-            //disambig co-ords? (for non-pawn/king)
-            if (movingPieceType == 'K') {
-                return new PGNChessMove();
-            }
-            else {
-                // 2 disambigs
-                if (c.length() == 2) {
-                    System.out.println("c is now " + c);
-                    startPos = targetCoords(c);
-                }
-                // 1 disambig
-                else if (c.length() == 1) {
-                    ch0 = c.charAt(0);
-                    int temp = Character.getNumericValue(ch0)-1;
-                    if (ch0>='a' && ch0<='h'){
-                        startPos[0] = columnToInt(c.charAt(0));
-                    }
-                    else if ( temp>=0 && temp<=7 ) {
-                        startPos[1] = temp;
-                    }
-                    else {
-                        return new PGNChessMove();
-                    }
-                }
-                // anything else is invalid
-                else {
-                    return new PGNChessMove();
-                }
-            }
-            // return all the info :)
-            return new PGNChessMove(false, movingPieceType, promoPiece, cap, startPos, newPos, check, checkmate);
+        // see if move wants to check or checkmate
+        char ch0 = c.charAt(c.length()-1);
+        if (ch0=='#') {
+            checkmate=true;
+            c = c.substring(0, c.length()-1);
         }
-        // any error indicates an invalid command 
-        catch (Exception e) {
-            return new PGNChessMove();
+        else if (ch0=='+') {
+            check=true;
+            c = c.substring(0, c.length()-1);
+        }
+
+        // see if move is castling
+        if (c.equals("0-0-0")) {return new Move(false, check, checkmate);}
+        else if (c.equals("0-0")) {return new Move(true, check, checkmate);}
+
+        // piece type?
+        ch0 = c.charAt(0);
+        if (ch0>='a' && ch0<='h') {
+            pieceType = "pawn";
+            startCol=columnToInt(ch0);
+            // check if it's a pawn promo
+            if (c.length()>3) {
+                String temp = c.substring(c.length()-4);
+                if ( temp.equals("8(Q)") || temp.equals("8(R)") || temp.equals("8(N)") || temp.equals("8(B)") ) {
+                    pawnPromo=true;
+                    if (temp.charAt(2) == 'Q') {promoPieceType = "queen";}
+                    else if (temp.charAt(2) == 'R') {promoPieceType = "rook";}
+                    else if (temp.charAt(2) == 'N') {promoPieceType = "knight";}
+                    else if (temp.charAt(2) == 'B') {promoPieceType = "bishop";}
+                    c = c.substring(0, c.length()-3);
+                }
+                
+            }
+        }
+        else if (ch0 == 'K' ) {pieceType = "king";}
+        else if (ch0 == 'Q' ) {pieceType = "queen";}
+        else if (ch0 == 'R' ) {pieceType = "rook";}
+        else if (ch0 == 'N' ) {pieceType = "knight";}
+        else if (ch0 == 'B' ) {pieceType = "bishop";}
+        else {
+            try {
+                throw new Exception();
+            } catch (Exception e) {
+                System.out.println("Invalid piece type at command string index 0");
+            }
+        }
+        // as long as the command isn't (pawn move + length=2)
+        if (!( (pieceType.equals("pawn")) && (c.length()==2) )) {
+            c = c.substring(1);
+        }
+        // extract end position co-ordinates from the string
+        var temp=targetCoords(c);
+        endCol=temp[0];
+        endRow=temp[1];
+        c = c.substring(0, c.length()-2);
+        //is the move a capture?
+        if (c.length()!=0 && c.charAt(c.length()-1)=='x') {
+            capture=true;
+            c = c.substring(0, c.length()-1);
+        }
+        //disambiguation info
+        if (c.length()==2) {
+            temp = targetCoords(c);
+            startCol=temp[0];
+            startRow=temp[1];
+        }
+        else if (c.length()==1) {
+            ch0 = c.charAt(0);
+            if (ch0>='a' && ch0<='h'){
+                startCol = columnToInt(c.charAt(0));
+            }
+            else if (Character.getNumericValue(ch0)>=1 && Character.getNumericValue(ch0)<=8) {
+                startRow = Character.getNumericValue(ch0)-1;
+            }
+            else {
+                try {
+                    throw new Exception();
+                } catch (Exception e) {
+                    System.out.println("Invalid command");
+                }
+            }
+        }
+        else if (c.length()!=0){
+            try {
+                throw new Exception();
+            } catch (Exception e) {
+                System.out.println("Invalid piece type at command string index 0");
+            }
+        }
+
+        // return the move :)
+        if (pieceType.equals("pawn")) {
+            m = new Move(endCol, endRow, capture, check, checkmate, pawnPromo, promoPieceType);
+            if (startCol!=-1) {m.setStartCol(startCol);}
+            if (startRow!=-1) {m.setStartRow(startRow);}
+            return m;
+        }
+        else {
+            m = new Move(pieceType, endCol, endRow, capture, check, checkmate);
+            if (startCol!=-1) {m.setStartCol(startCol);}
+            if (startRow!=-1) {m.setStartRow(startRow);}
+            return m;
         }
     }
-
 }

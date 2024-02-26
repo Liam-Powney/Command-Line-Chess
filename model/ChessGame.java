@@ -2,8 +2,6 @@ package model;
 
 import java.util.ArrayList;
 
-import controller.PGNChessMove;
-
 public class ChessGame extends GameState{
     
     private Piece[][] board;
@@ -62,192 +60,108 @@ public class ChessGame extends GameState{
         whitesTurn = !whitesTurn;
     }
 
-    // finds all the possible pieces that can move to the target square for a given PGN move decoded by the controller
-    public ArrayList<Piece> possPieces(PGNChessMove m) {
-        ArrayList<Piece> out = new ArrayList<Piece>();
-        // start pos known
-        int startCol = m.startPos()[0];
-        int startRow = m.startPos()[1];
+    // uses the board to find the relevant piece to a given move and sets the piece, start col and start row values for move m
+    public Move findPiece(Move m) {
+
+        ArrayList<Move> possibleMoves = new ArrayList<>();
 
         for (int squareRow=0; squareRow<8; squareRow++) {
             for (int squareCol=0; squareCol<8; squareCol++) {
-                // search columns and rows only that we need to given any disambig data present in the PGNMove
-                if ( (startCol == -1 || squareCol == startCol) && (startRow == -1 || squareRow == startRow) ) {
+                // search columns and rows only that we need to given any disambig data present in the move
+                if ( (m.getStartCol()==-1 || squareCol==m.getStartCol()) && (m.getStartRow()==-1 || squareRow==m.getStartRow()) ) {
                     Piece square = board[squareRow][squareCol];
-                    if (square==null) {continue;}
-                    if (square.getPieceChar()==m.movingPieceType() && square.getWhite()==whitesTurn && isPieceMovePossible(squareCol, squareRow, m)) {
-                        out.add(square);
+                    if (square!=null && square.getType().equals(m.getPieceType()) && square.getWhite()==whitesTurn) {
+                        Move testMove = new Move(m, squareCol, squareRow, square);
+                        if (isMoveInRange(testMove)) {
+                            possibleMoves.add(testMove);
+                        }
                     }
                 }
             }
         }
-        return out;
+        if (possibleMoves.size()==1) {
+            return possibleMoves.get(0);
+        }
+        m.setPiece(null);
+        return m;
     }
 
-    // can a piece move to the target square given the current board?
-    public boolean isPieceMovePossible(int startCol, int startRow, PGNChessMove m) {
+    public void performMove(Move m) {
+        board[m.getEndRow()][m.getEndCol()] = m.getPiece();
+        board[m.getStartRow()][m.getStartCol()] = null;
+        nextTurn();
+    }
 
-        // current piece we are working with
-        Piece p = board[startRow][startCol];
-        //int[] moveVec = new int[] {m.endPos()[0]-startCol, m.endPos()[1]-startRow};
+    public boolean isMovePossible(Move m) {
+        if (m.getPiece()==null) {return false;}
+        if (isMoveInRange(m) && !moveCheckChecker(m, whitesTurn)) {return true;}
+        return false;
+    }
 
-        // is it a pawn?
-        if (m.movingPieceType() == 'p') {
-            
-            // is it a move aka not a capture?
-            if (!m.captureAttempt()) {
-                /// has the pawn not moved yet? (check all of forward direction moves)
-                if (!p.getHasMoved()) {
-                    for (int[] possiblePieceVec : p.getMoves()[0]) {
-                        Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
-                        // if the square isn't the target square
-                        if ( startCol+possiblePieceVec[0] != m.endPos()[0] || startRow+possiblePieceVec[1] != m.endPos()[1]) {
-                            // if the square is empty
-                            if (square==null) {
-                                continue;
-                            }
-                            // if the square is taken
-                            else {
-                                break;
-                            }
-                        }
-                        // if the square is the target square
-                        else {
-                            // if the square is empty and the move won't leave player in check
-                            if (square==null && !checkChecker(board[startRow][startCol], m, true)) {
-                                return true;
-                            }
-                            else {
-                                System.out.println("Pawn can't go to the target square specified. Please check to make sure the square is empty, or the move doesn't leave you in check.");
-                                break;
-                            }
-                        }
-                    }
+    // for a given move m, sees whether the piece can make it to the end position square
+    public boolean isMoveInRange(Move m) {
+
+        // for each possible move vector in each direction for the piece
+        for (int i=0; i<m.getPiece().getMoves().length; i++) {
+            for (int j=0; j<m.getPiece().getMoves()[i].length; j++) { 
+                int[] possibleVec = m.getPiece().getMoves()[i][j];
+                // make sure we aren't going off the board :)
+                Piece currentSquare;
+                try {
+                    currentSquare = board[m.getStartRow()+possibleVec[1]][m.getStartCol()+possibleVec[0]];
+                // catch block stops the direction when indices start going off the board
+                } catch (Exception e) {
+                    break;
                 }
-                /// else - (just check first forward direction move)
-                else {
-                    int[] possiblePieceVec = p.getMoves()[0][0];
-                    Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
-                    // is it the target square?
-                    if (startCol+possiblePieceVec[0] == m.endPos()[0] && startRow+possiblePieceVec[1] == m.endPos()[1] ){
-                        // if the square is empty and the move won't leave player in check
-                        if (square==null && !checkChecker(board[startRow][startCol], m, true)) {
-                            return true;
-                        }
-                        else {
-                            System.out.println("Pawn can't go to the target square specified. Please check to make sure the square is empty, or the move doesn't leave you in check.");
+                // if the current square is NOT the target square 
+                if (currentSquare!=board[m.getEndRow()][m.getEndCol()]) {
+                    // if it's empty, continue in the current direction
+                    if (currentSquare==null) {
+                        // make sure pawn can't move forwards 2 spaces if it's already moved
+                        if (m.getPiece() instanceof Pawn && m.getPiece().getHasMoved() && i==0) {
+                            break;
                         }
                     }
-                    // not the target square
+                    // if it's taken, move to the next direction
                     else {
-                        System.out.println("Pawn can't go to the target square specified.");
-                    }
-                }
-            }
-            // is it a capture?
-            else {
-                /// check taking 'direction' (only two non linear moves)
-                for (int[] possiblePieceVec : p.getMoves()[1]) {
-                    Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
-                    // if the square isn't the target square
-                    if ( startCol+possiblePieceVec[0] != m.endPos()[0] || startRow+possiblePieceVec[1] != m.endPos()[1]) {
-                        continue;
-                    }
-                    // if it is the target square
-                    else {
-                        // make sure it's got a piece of opposite colour on and the move won't leave the player in check!
-                        if (square!=null && square.getWhite()!=whitesTurn && !checkChecker(board[startRow][startCol], m, true)) {
-                            return true;
-                        }
-                        else {
-                            System.out.println("Can't make that pawn capture. Please ensure there is an enemy piece on target square and that the move won't leave you in check");
-                        }
-                    }
-                }
-            }
-        }
-        // any other piece
-        else {
-            Outer:
-            // for each direction the piece can move
-            for (int[][] direction : p.getMoves()) {
-                // for each increment in that direction
-                for (int[] possiblePieceVec : direction) {
-
-                    // keep indicies in bounds - omits possible moves that would send the piece off the board :)
-                    try {
-
-                        // if the current square that the piece move in the current direction corresponds to ISNT the target square of the move
-                        if ( startCol+possiblePieceVec[0] != m.endPos()[0] || startRow+possiblePieceVec[1] != m.endPos()[1]) {
-                            Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
-                            // if that square is empty - continue in the direction
-                            if (square==null) {
-                                continue;
-                            }
-                            // otherwise - go to the next direction
-                            else {
-                                break;
-                            }
-                        }
-                         // if the current square that the piece move in the current direction corresponds to IS the target square of the move
-                        else {
-                            /// if square empty and move - true
-                            Piece square = board[startRow+possiblePieceVec[1]][startCol+possiblePieceVec[0]];
-                            if (square==null && !m.captureAttempt() && !checkChecker(board[startRow][startCol], m, true)) {
-                                return true;
-                            }
-                            ///else if enemy piece and capture - true
-                            else if ( square.getWhite()!=whitesTurn && m.captureAttempt() && !checkChecker(board[startRow][startCol], m, true)) {
-                                return true;
-                            }
-                            /// otherwise the move isn't possible 
-                            else {
-                                System.out.println("The piece can't go to the target square specified. Please check to make sure the square is empty, or you correctly specified a capture attempt.");
-                                break Outer;
-                            }
-                        }
-                    }
-                    catch (Exception e) {
                         break;
                     }
                 }
-            }
-        }
-        return false;
-    }
-
-    // check checker - does a move leave the player in check? returns true if king is in check, bool 'myKing' is true if checking same colour king as whose turn it is, false if enemy king
-    public boolean checkChecker(Piece p, PGNChessMove m, boolean myKing) {
-        return false;
-    }
-
-    // attempt a PGN move checking against game logic
-    public boolean attemptMove(PGNChessMove m) {
-        ArrayList<Piece> possP = possPieces(m);
-        if (possP.size()>1) {
-            System.out.println("There are multiple pieces that can perform that move. Please make use of disambiguation information.");
-            return false;
-        }
-        else if(possP.size()==0) {
-            System.out.println("None of your pieces can perform that move. Please check your input.");
-            return false;
-        }
-        else {
-            Piece p = possP.get(0);
-            Outer:
-            for (int row=0; row<8; row++) {
-                for (int col=0; col<8; col++) {
-                    if (board[row][col] != null && board[row][col] == p) {
-                        board[row][col] = null;
-                        break Outer;
+                // if the current square IS the target square
+                else {
+                    // if the piece isn't a pawm
+                    if (!(m.getPiece() instanceof Pawn)) {
+                        // if the square is either empty or occupied by an enemy piece
+                        if (currentSquare==null || currentSquare.getWhite()!=m.getPiece().getWhite()) {
+                            return true;
+                        }
+                        else {return false;}
+                    }
+                    //piece is a pawn
+                    else {
+                        //if the square is either 1. empty and the pawn is moving forwards, or 2. the square is taken and the pawn is moving diagonally 
+                        if ((currentSquare==null && i==0) || (currentSquare.getWhite()!=m.getPiece().getWhite() && i==1)) {
+                            return true;
+                        }
+                        else {return false;}
                     }
                 }
-            }
-            board[m.endPos()[1]][m.endPos()[0]] = p;
-            p.setMoved();
-            nextTurn();
-            return true;
+            } 
         }
+        return false;
     }
+
+    public boolean moveCheckChecker(Move m, boolean myKing) {
+        return false;
+    }
+
+    // says whether the white or black king (depending on whiteCheck bool input) is in check for a given board
+    public boolean boardCheckChecker(Piece[][] b, boolean whiteCheck) {
+        return false;
+    }
+
+
+
+
 
 }
