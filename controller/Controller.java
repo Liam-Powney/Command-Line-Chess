@@ -38,7 +38,8 @@ public class Controller {
         }
  
         if (cs instanceof ChessGame) {
-            var cg = (ChessGame) cs;
+            ChessGame cg = (ChessGame) cs;
+            cg.setErrorMessage("");
             // parse command
             if (command.equalsIgnoreCase("quit")) {
                 System.out.println("Quitting game and tkaing you to the main menu...");
@@ -52,16 +53,11 @@ public class Controller {
                 cg.setErrorMessage("Move invalid");
                 return;
             }
-            m = cg.findPiece(m, cg.getBoard());
-            if (m.getPiece()==null) {
-                cg.setErrorMessage("There are either no pieces or multiple pieces that can make that move");
-                return;
+            try {
+                cg.attemptMove(m);
+            } catch (Exception e) {
+                cg.setErrorMessage("Move not possible.");
             }
-            if (cg.isMovePossible(m, cg.getBoard())) {
-                cg.performMove(m, cg.getBoard());
-                return;
-            }
-            cg.setErrorMessage("Move not possible.");
         }
     }
 

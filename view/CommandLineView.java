@@ -20,7 +20,7 @@ public class CommandLineView {
     }
 
     public void draw(GameState gs) {
-        clearScreen();
+        //clearScreen();
         if (gs instanceof WelcomeScreen) {drawWelcomeScreen((WelcomeScreen)gs);}
         else if (gs instanceof ChessGame) {drawChessGame((ChessGame)gs);}
     }

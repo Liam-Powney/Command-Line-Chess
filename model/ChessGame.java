@@ -101,33 +101,28 @@ public class ChessGame extends GameState{
         whitesTurn = !whitesTurn;
     }
 
-    // uses the board to find the relevant piece to a given move and sets the piece, start col and start row values for move m
-    public Move findPiece(Move m, Piece[][] board) {
-
-        ArrayList<Move> possibleMoves = new ArrayList<>();
-
-        for (int squareRow=0; squareRow<8; squareRow++) {
-            for (int squareCol=0; squareCol<8; squareCol++) {
-                // search columns and rows only that we need to given any disambig data present in the move
-                if ( (m.getStartCol()==-1 || squareCol==m.getStartCol()) && (m.getStartRow()==-1 || squareRow==m.getStartRow()) ) {
-                    Piece square = board[squareRow][squareCol];
-                    if (square!=null && square.getType().equals(m.getPieceType()) && square.getWhite()==whitesTurn) {
-                        Move testMove = new Move(m, squareCol, squareRow, square);
-                        if (isMoveInRange(testMove, board)) {
-                            possibleMoves.add(testMove);
-                        }
-                    }
-                }
+    public void attemptMove(Move m) {
+        // find the relevant piece and start coords for the given move and ensures there is only one piece on the board that can make this move
+        Move move = validatMove(m, boardStack.getLast());
+        if (move.getPiece()==null) {
+            try {
+                throw new Exception();
+            } catch (Exception e) {
+                System.out.println("Couldn't validate move");
             }
         }
-        if (possibleMoves.size()==1) {
-            return possibleMoves.get(0);
+        Piece[][] nwBoard = performMove(move, getBoard());
+        if (boardCheckChecker(nwBoard, whitesTurn)) {
+            System.out.println("Move leaves king in check");
+            return;
         }
-        m.setPiece(null);
-        return m;
+
+        boardStack.add(nwBoard);
+        nextTurn();
+        
     }
 
-    public void performMove(Move m, Piece[][] board) {
+    public Piece[][] performMove(Move m, Piece[][] board) {
 
         // clone board for the output 
         Piece[][] out = cloneBoard(board);
@@ -141,53 +136,70 @@ public class ChessGame extends GameState{
         }
         
         // move the pieces
-
-        // if it's an enpassant move
+        /// if it's an enpassant move
         if (m.getEnPassant()) {
             out[m.getEndRow()][m.getEndCol()] = m.getPiece();
             out[m.getStartRow()][m.getStartCol()] = null;
             out[m.getStartRow()][m.getEndCol()] = null;
         }
-        // otherwise
+        /// otherwise
         else {
             out[m.getEndRow()][m.getEndCol()] = m.getPiece();
             out[m.getStartRow()][m.getStartCol()] = null;
         }
         // set any flags necessary for 'has moved' and 'enpassantable'
         out[m.getEndRow()][m.getEndCol()].setMoved(m);
-        // change the turn
-        nextTurn();
 
-        boardStack.add(out);
+        return out;
     }
 
-    public boolean isMovePossible(Move m, Piece[][] board) {
-        if (m.getPiece()==null) {return false;}
-        if (!moveCheckChecker(m, board, whitesTurn)) {return true;}
-        return false;
+    // uses the board to find the relevant piece to a given move and sets the piece, start col and start row values for move m
+    public Move validatMove(Move m, Piece[][] board) {
+
+        ArrayList<Move> possibleMoves = new ArrayList<>();
+
+        for (int squareRow=0; squareRow<8; squareRow++) {
+            for (int squareCol=0; squareCol<8; squareCol++) {
+                // search columns and rows only that we need to given any disambig data present in the move
+                if ( (m.getStartCol()==-1 || squareCol==m.getStartCol()) && (m.getStartRow()==-1 || squareRow==m.getStartRow()) ) {
+                    Piece square = board[squareRow][squareCol];
+                    if (square!=null && square.getType().equals(m.getPieceType()) && square.getWhite()==whitesTurn) {
+                        Move testMove = new Move(m, squareCol, squareRow, square);
+                        if (isPieceInRange(testMove.getPiece(), squareCol, squareRow, testMove.getEndCol(), testMove.getEndRow(), board)) {
+                            possibleMoves.add(testMove);
+                        }
+                    }
+                }
+            }
+        }
+        if (possibleMoves.size()==1) {
+            return possibleMoves.get(0);
+        }
+        m.setPiece(null);
+        return m;
     }
 
-    // for a given move m, sees whether the piece can make it to the end position square
-    public boolean isMoveInRange(Move m, Piece[][] board) {
+    // states whether a piece can 'reach' a given end co-ordinate given a start co-ordinate for a given board
+    public boolean isPieceInRange(Piece p, int startCol, int startRow, int endCol, int endRow, Piece[][] board) {
 
         // for each possible move vector in each direction for the piece
-        for (int i=0; i<m.getPiece().getMoves().length; i++) {
-            for (int j=0; j<m.getPiece().getMoves()[i].length; j++) { 
-                int[] possibleVec = m.getPiece().getMoves()[i][j];
+        for (int i=0; i<p.getMoves().length; i++) {
+            for (int j=0; j<p.getMoves()[i].length; j++) { 
+                int[] possibleVec = p.getMoves()[i][j];
                 // make sure we aren't going off the board :)
                 Piece currentSquare;
                 try {
-                    currentSquare = board[m.getStartRow()+possibleVec[1]][m.getStartCol()+possibleVec[0]];
+                    currentSquare = board[startRow+possibleVec[1]][startCol+possibleVec[0]];
                 // catch block stops the direction when indices start going off the board
                 } catch (Exception e) {
                     break;
                 }
                 // if the current square is NOT the target square 
-                if ( m.getStartCol()+possibleVec[0]!=m.getEndCol() || m.getStartRow()+possibleVec[1]!=m.getEndRow() ) {
+                if ( startCol+possibleVec[0]!=endCol || startRow+possibleVec[1]!=endRow ) {
                     // if it's empty, continue in the current direction
                     if (currentSquare==null) {
                         // make sure pawn can't move forwards 2 spaces if it's already moved
-                        if (m.getPiece() instanceof Pawn && m.getPiece().getHasMoved() && i==0) {
+                        if (p instanceof Pawn && p.getHasMoved() && i==0) {
                             break;
                         }
                     }
@@ -199,9 +211,9 @@ public class ChessGame extends GameState{
                 // if the current square IS the target square
                 else {
                     // if the piece isn't a pawm
-                    if (!(m.getPiece() instanceof Pawn)) {
+                    if (!(p instanceof Pawn)) {
                         // if the square is either empty or occupied by an enemy piece
-                        if (currentSquare==null || currentSquare.getWhite()!=m.getPiece().getWhite()) {
+                        if (currentSquare==null || currentSquare.getWhite()!=p.getWhite()) {
                             return true;
                         }
                         else {return false;}
@@ -210,16 +222,15 @@ public class ChessGame extends GameState{
                     else {
                         //if the square is either 
                         ////1. empty and the pawn is moving forwards
-                        if (currentSquare==null && i==0 && !m.getCapture()) {
+                        if (currentSquare==null && i==0) {
                             return true;
                         }
                         ////2. the square is taken by an enemy piece and the pawn is moving diagonally
-                        else if( currentSquare!=null && i==1 && m.getCapture() && currentSquare.getWhite()!=m.getPiece().getWhite()) {
+                        else if( currentSquare!=null && i==1 && currentSquare.getWhite()!=p.getWhite()) {
                             return true;
                         }
                         ////3. the piece is moving diagonally and the square is empty but the piece to the direct side of the pawn is an enpassantable pawn 
-                        else if (currentSquare==null && i==1 && m.getCapture() && (board[m.getStartRow()][m.getEndCol()] instanceof Pawn) && ((Pawn)board[m.getStartRow()][m.getEndCol()]).getEnPassantable()) {
-                            m.setEnPassant();
+                        else if (currentSquare==null && i==1 && (board[startRow][endCol] instanceof Pawn) && ((Pawn)board[startRow][endCol]).getEnPassantable()) {
                             return true;
                         }
                         else {return false;}
@@ -228,24 +239,34 @@ public class ChessGame extends GameState{
             } 
         }
         return false;
-    }
+    } 
 
-    public boolean moveCheckChecker(Move m, Piece[][] board, boolean myKing) {
+    // says whether the white or black king (depending on whiteCheck bool input) is in check for a given board
+    public boolean boardCheckChecker(Piece[][] board, boolean whiteKing) {
         
-        Piece[][] boardClone = new Piece[8][8];
+        int kingCol=-1, kingRow=-1;
+
+        Outer:
         for (int i=0; i<8; i++) {
             for (int j=0; j<8; j++) {
-                boardClone[i][i]=board[i][j];
+                if (board[i][j] instanceof King && board[i][j].getWhite()==whiteKing) {
+                    kingCol=j;
+                    kingRow=i;
+                    break Outer;
+                }
             }
         }
 
-
-        
-        return false;
-    }
-
-    // says whether the white or black king (depending on whiteCheck bool input) is in check for a given board
-    public boolean boardCheckChecker(Piece[][] b, boolean whiteCheck) {
+        for (int i=0; i<8; i++) {
+            for (int j=0; j<8; j++) {
+                Piece square = board[i][j];
+                if (square!=null && square.getWhite()!=whiteKing) {
+                    if (isPieceInRange(square, j, i, kingCol, kingRow, board)) {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 
