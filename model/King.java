@@ -11,5 +11,9 @@ public class King extends Piece{
                                     {{ 1,-1}},
                                     {{ 1, 0}},
                                     {{ 1, 1}}});
-    } 
+    }
+
+    public King(King k) {
+        super(k);
+    }
 }

@@ -52,13 +52,13 @@ public class Controller {
                 cg.setErrorMessage("Move invalid");
                 return;
             }
-            m = cg.findPiece(m);
+            m = cg.findPiece(m, cg.getBoard());
             if (m.getPiece()==null) {
                 cg.setErrorMessage("There are either no pieces or multiple pieces that can make that move");
                 return;
             }
-            if (cg.isMovePossible(m)) {
-                cg.performMove(m);
+            if (cg.isMovePossible(m, cg.getBoard())) {
+                cg.performMove(m, cg.getBoard());
                 return;
             }
             cg.setErrorMessage("Move not possible.");

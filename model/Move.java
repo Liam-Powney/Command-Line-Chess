@@ -12,6 +12,7 @@ public class Move {
 
     private boolean pawnPromo;
     private String promoPieceType;
+    private boolean enPassant;
 
     // CONSTRUCTORS
     // castling move constructor
@@ -33,6 +34,7 @@ public class Move {
         this.checkmate = checkmate;
         this.pawnPromo = pawnPromo;
         this.promoPieceType = promoPieceType;
+        this.enPassant=false;
     }
     // other piece move constructor
     public Move(String pieceType, int endCol, int endRow, boolean capture, boolean check, boolean checkmate) {
@@ -59,6 +61,7 @@ public class Move {
         if (m.getPieceType().equals("pawn")) {
             this.pawnPromo=m.getPawnPromo();
             this.promoPieceType=m.getPromoPieceType();
+            this.enPassant=m.getEnPassant();
         }
     }
 
@@ -75,9 +78,11 @@ public class Move {
     public boolean getCheckmate() {return checkmate;}
     public boolean getPawnPromo() {return pawnPromo;}
     public String getPromoPieceType() {return promoPieceType;}
+    public boolean getEnPassant() {return enPassant;}
 
     public void setPiece(Piece p) {piece = p;}
     public void setStartCol(int s) {startCol = s;}
     public void setStartRow(int s) {startRow = s;}
+    public void setEnPassant() {enPassant=true;}
 
 }

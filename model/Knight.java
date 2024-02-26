@@ -11,5 +11,9 @@ public class Knight extends Piece{
                                     {{-1, 2}},
                                     {{ 1,-2}},
                                     {{-1,-2}}});
-    }    
+    }
+    
+    public Knight(Knight k) {
+        super(k);
+    }
 }

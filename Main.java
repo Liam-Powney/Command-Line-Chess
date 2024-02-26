@@ -13,7 +13,6 @@ public class Main {
         CommandLineView view = new CommandLineView();
         // create controller instance with access to the model and the view
         Controller controller = new Controller(game, view);
-
         // scanner for recieving inputs
         Scanner scanner = new Scanner(System.in);
 
@@ -31,7 +30,5 @@ public class Main {
             }
             controller.executeCmd(input);
         }
-
     }
-
 }
