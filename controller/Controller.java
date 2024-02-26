@@ -16,14 +16,14 @@ public class Controller {
     public void executeCmd(String command) {
 
         // update model based on command and current game state
-
         // create var for the current state (cs)
-        var cs = game.getLastState();
+        GameState cs = game.getLastState();
+        cs.clearErrorMessage();
         if (cs instanceof WelcomeScreen) {
             switch (command) {
                 case "1":
                     System.out.print("\nStarting new game...\n\n");
-                    game.pushChessGame();
+                    game.pushGameState(new ChessGame());
                     break;
                 case "2":
                     System.out.println("Not implemented yet, please choose something else :)");
@@ -39,7 +39,6 @@ public class Controller {
  
         if (cs instanceof ChessGame) {
             ChessGame cg = (ChessGame) cs;
-            cg.setErrorMessage("");
             // parse command
             if (command.equalsIgnoreCase("quit")) {
                 System.out.println("Quitting game and tkaing you to the main menu...");
@@ -57,6 +56,29 @@ public class Controller {
                 cg.attemptMove(m);
             } catch (Exception e) {
                 cg.setErrorMessage("Move not possible.");
+                return;
+            }
+            if (m.getCheckmate()) {game.pushGameState(new EndGame(!cg.getWhitesTurn(), cg.getBoard()));}
+        }
+
+        if (cs instanceof EndGame) {
+            EndGame eg=(EndGame)cs;
+            switch (command) {
+                case "1":
+                    game.popGamestateStack();
+                    game.popGamestateStack();
+                    game.pushGameState(new ChessGame());
+                    break;
+                case "2":
+                    game.popGamestateStack();
+                    game.popGamestateStack();
+                    break;
+                case "help":
+                    System.out.println("Select '2' to return to the main menu :)");
+                    break;
+                default:
+                    game.getLastState().setErrorMessage("Command not recognised. Enter 'help' for assistance.");
+                    break;
             }
         }
     }

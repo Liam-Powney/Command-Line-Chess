@@ -63,6 +63,14 @@ public class CommandLineView {
         if (cg.getErrorMessage().length()>0) {System.out.println(cg.getErrorMessage());}
     }
 
+    public void drawEndGame(EndGame eg) {
+        String out="";
+        if (eg.getWhiteWon()) {out+="White";}
+        else {out+="Black";}
+        out+=" won! \n\n What would you like to do?\n\n 1 - Play again\n2 - Exit\n";
+        System.out.println(out);
+    }
+
     public void clearScreen() {
         System.out.print("\033[H\033[2J");
         System.out.flush();

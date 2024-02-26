@@ -12,8 +12,4 @@ public abstract class GameState {
     public String getErrorMessage() {return errorMessage;}
     public void setErrorMessage(String s) {errorMessage=s;}
     public void clearErrorMessage() {errorMessage="";}
-
-
-    
-    
 }

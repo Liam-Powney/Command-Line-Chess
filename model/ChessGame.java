@@ -51,9 +51,11 @@ public class ChessGame extends GameState{
         boardStack.add(board);
     }
 
-    public Piece[][] getBoard() {
-        return boardStack.getLast();
-    }
+    public Piece[][] getBoard() {return boardStack.getLast();}
+
+    // changes the turn
+    public void nextTurn() {whitesTurn = !whitesTurn;}
+    public boolean getWhitesTurn() {return whitesTurn;}
 
     public Piece[][] cloneBoard(Piece[][] board) {
         Piece[][] out = new Piece[8][8];
@@ -92,15 +94,6 @@ public class ChessGame extends GameState{
         return out;
     }
 
-    public boolean getWhitesTurn() {
-        return whitesTurn;
-    }
-
-    // changes the turn
-    public void nextTurn() {
-        whitesTurn = !whitesTurn;
-    }
-
     public void attemptMove(Move m) {
         // find the relevant piece and start coords for the given move and ensures there is only one piece on the board that can make this move
         Move move = validatMove(m, boardStack.getLast());
@@ -112,14 +105,24 @@ public class ChessGame extends GameState{
             }
         }
         Piece[][] nwBoard = performMove(move, getBoard());
+        // ensures the move doesn't leave the player's king in check
         if (boardCheckChecker(nwBoard, whitesTurn)) {
             System.out.println("Move leaves king in check");
             return;
         }
-
+        // ensures the player correctly indicated whether the move would cause check or not
+        if (!(boardCheckChecker(nwBoard, !whitesTurn)==move.getCheck())) {
+            System.out.println("Your check indicator is incorrect.");
+            return;
+        }
+        // ensures the player correctly indicated whether the move would cause checkmate or not
+        else if (!(checkmateChecker(nwBoard, whitesTurn)==move.getCheckmate())) {
+            System.out.println("Your checkmate indicator is incorrect.");
+            return;
+        }
+        // add the new board to the stack
         boardStack.add(nwBoard);
         nextTurn();
-        
     }
 
     public Piece[][] performMove(Move m, Piece[][] board) {
@@ -267,6 +270,29 @@ public class ChessGame extends GameState{
                 }
             }
         }
+        return false;
+    }
+
+    public boolean checkmateChecker(Piece[][] board, boolean whiteKing) {
+
+        int kingCol=-1, kingRow=-1;
+
+        Outer:
+        for (int i=0; i<8; i++) {
+            for (int j=0; j<8; j++) {
+                if (board[i][j] instanceof King && board[i][j].getWhite()==whiteKing) {
+                    kingCol=j;
+                    kingRow=i;
+                    break Outer;
+                }
+            }
+        }
+
+        // try all possible moves and see if there are any that get the king out of check
+        // for (all possible moves)
+            // if (boardAfterMove.checkChecker==false)
+                // return false
+        // return true;
         return false;
     }
 

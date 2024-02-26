@@ -11,16 +11,7 @@ public class Game {
         gamestateStack.add(new WelcomeScreen());
     }
 
-    public GameState getLastState() {
-        return gamestateStack.getLast();
-    }
-
-    public void pushChessGame() {
-        gamestateStack.add(new ChessGame());
-    }
-
-    public void popGamestateStack() {
-        gamestateStack.removeLast();
-    }
-
+    public GameState getLastState() {return gamestateStack.getLast();}
+    public void pushGameState(GameState gs) {gamestateStack.push(gs);}
+    public void popGamestateStack() {gamestateStack.pop();}
 }
