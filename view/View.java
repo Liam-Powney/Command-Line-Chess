@@ -3,14 +3,14 @@ import java.util.HashMap;
 
 import model.*;
 
-public class CommandLineView {
+public class View {
 
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_INVERT = "\u001B[7m";
 
     private HashMap<String, Character> spriteMap = new HashMap<>();
 
-    public CommandLineView() {
+    public View() {
         spriteMap.put("rook", 'R');
         spriteMap.put("knight", 'N');
         spriteMap.put("bishop", 'B');

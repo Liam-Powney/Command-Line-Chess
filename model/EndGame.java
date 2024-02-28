@@ -5,7 +5,7 @@ public class EndGame extends GameState{
     private boolean whiteWon;
     private Piece[][] board;
 
-    public EndGame(boolean whiteWon, Piece[][] board) {
+    public EndGame(Piece[][] board, boolean whiteWon) {
         super();
         this.board=board;
         this.whiteWon=whiteWon;

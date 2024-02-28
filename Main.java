@@ -1,6 +1,6 @@
 import controller.Controller;
 import model.Game;
-import view.CommandLineView;
+import view.View;
 import java.util.Scanner;
 
 public class Main {
@@ -10,7 +10,7 @@ public class Main {
         // create model instance
         Game game = new Game();
         // create view instance
-        CommandLineView view = new CommandLineView();
+        View view = new View();
         // create controller instance with access to the model and the view
         Controller controller = new Controller(game, view);
         // scanner for recieving inputs
@@ -19,7 +19,7 @@ public class Main {
         // main game loop
         while(true) {
             // draw the game
-            view.draw(game.getLastState());
+            controller.drawGame();
             // request new command
             System.out.print("CH> ");
             String input = scanner.nextLine().trim();
