@@ -336,7 +336,7 @@ public class ChessGame extends GameState{
         return true;
     }
 
-    private int[] getKingsCoords(Piece[][] board, boolean white) {
+    public int[] getKingsCoords(Piece[][] board, boolean white) {
         for (int row=0; row<8; row++) {
             for (int col=0; col<8; col++) {
                 Piece square = board[row][col];
