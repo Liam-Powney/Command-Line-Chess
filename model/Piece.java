@@ -3,10 +3,10 @@ package model;
 
 public abstract class Piece {
     
-    protected boolean white;
+    protected final boolean white;
     protected boolean hasMoved;
     protected final int[][][] moves;
-    protected String type;
+    protected final String type;
 
     // Constructors
     public Piece(boolean white, String type, int[][][] moves){
@@ -29,15 +29,5 @@ public abstract class Piece {
     public String getType() {return type;}
     public int[][][] getMoves() {return moves;}
 
-    public void setMoved(Move m) {
-        // if the move is a pawn doing a double move
-        if (m.getPiece() instanceof Pawn) {
-            if (Math.abs(m.getEndRow()-m.getStartRow())==2) {
-                ((Pawn)m.getPiece()).setEnPassantable(true);
-            }
-        }
-        hasMoved = true;
-    }
-
-
+    public void setMoved(Move m) {hasMoved = true;}
 }

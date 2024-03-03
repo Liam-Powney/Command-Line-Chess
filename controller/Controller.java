@@ -44,8 +44,10 @@ public class Controller {
                 game.goToWelcomeScreen();
                 return;
             }
-            else {
+            try {
                 cg.attemptMove(command);
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
         }
 

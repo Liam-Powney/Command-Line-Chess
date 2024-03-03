@@ -28,7 +28,7 @@ public class Game {
 
     public void goToEndGame(Piece[][] board, boolean whiteWon) {
         try {
-            if (!(gamestateStack.getLast() instanceof ChessGame)) {
+            if (!(gamestateStack.getFirst() instanceof ChessGame)) {
                 throw new Exception();
             }
         } catch (Exception e) {
