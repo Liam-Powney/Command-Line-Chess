@@ -1,17 +1,17 @@
 package model;
 
-import java.util.LinkedList;
 import java.util.HashMap;
+import java.util.Stack;
 
 public class ChessGame extends GameState{
     
-    private LinkedList<Piece[][]> boardStack;
-
+    private Stack<Piece[][]> boardStack;
     private boolean whitesTurn;
 
     // constructor - set up the board and pieces
     public ChessGame() {
         this.whitesTurn = true;
+        this.boardStack = new Stack<Piece[][]>();
         Piece[][] board = new Piece[8][8];
         // white pieces
         board[0][0] = new Rook(true);
@@ -48,15 +48,13 @@ public class ChessGame extends GameState{
         board[6][6] = new Pawn(false);
         board[6][7] = new Pawn(false);
 
-        boardStack=new LinkedList<Piece[][]>();
-        boardStack.add(board);
+        boardStack.push(board);
     }
 
     //
     // GETTERS AND SETTERS
     //
-
-    public Piece[][] getBoard() {return boardStack.getFirst();}
+    public Piece[][] getBoard() {return boardStack.peek();}
     public boolean getWhitesTurn() {return whitesTurn;}
 
     //
@@ -95,6 +93,7 @@ public class ChessGame extends GameState{
         }
 
         boardStack.push(newBoard);
+        boardStack.peek()[1][2]=null;
         whitesTurn=!whitesTurn;
     }
 

@@ -95,6 +95,9 @@ public class ChessGameTest {
     public void testGetKingCoords() {
         assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), cg.getWhitesTurn()), new int[] {3, 0}));
         assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), !cg.getWhitesTurn()), new int[] {3, 7}));
+        Piece[][] test = cg.cloneBoard(cg.getBoard());
+        test[0][3]=null;
+        assertThrows(IllegalArgumentException.class, () -> cg.getKingsCoords(test, cg.getWhitesTurn()));
     }
 
 
