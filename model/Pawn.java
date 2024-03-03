@@ -37,4 +37,16 @@ public class Pawn extends Piece{
         }
         this.hasMoved=true;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!super.equals(obj)) {return false;}
+        if (!(obj instanceof Pawn)) {return false;}
+        Pawn p = (Pawn)obj;
+        if (this.enPassantable==p.getEnPassantable()) {
+            return true;
+        }
+        return false;
+
+    }
 }

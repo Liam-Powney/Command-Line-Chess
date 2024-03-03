@@ -8,8 +8,15 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Arrays;
 
+import model.Bishop;
 import model.ChessGame;
+import model.King;
+import model.Knight;
 import model.Move;
+import model.Pawn;
+import model.Piece;
+import model.Queen;
+import model.Rook;
 
 public class ChessGameTest {
     
@@ -75,6 +82,53 @@ public class ChessGameTest {
         assertThrows(IllegalArgumentException.class, () -> cg.moveParser("a3(Q)"));
         assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Rxa8(Q)"));
         assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Kf6+#"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Qjf6#"));
+    }
+    @Test
+    public void testBoardCloner() {
+        Piece[][] board = new Piece[8][8];
+        // white pieces
+        board[0][0] = new Rook(true);
+        board[0][1] = new Knight(true);
+        board[0][2] = new Bishop(true);
+        board[0][3] = new King(true);
+        board[0][4] = new Queen(true);
+        board[0][5] = new Bishop(true);
+        board[0][6] = new Knight(true);
+        board[0][7] = new Rook(true);
+        board[1][0] = new Pawn(true);
+        board[1][1] = new Pawn(true);
+        board[1][2] = new Pawn(true);
+        board[1][3] = new Pawn(true);
+        board[1][4] = new Pawn(true);
+        board[1][5] = new Pawn(true);
+        board[1][6] = new Pawn(true);
+        board[1][7] = new Pawn(true);
+        // black pieces
+        board[7][0] = new Rook(false);
+        board[7][1] = new Knight(false);
+        board[7][2] = new Bishop(false);
+        board[7][3] = new King(false);
+        board[7][4] = new Queen(false);
+        board[7][5] = new Bishop(false);
+        board[7][6] = new Knight(false);
+        board[7][7] = new Rook(false);
+        board[6][0] = new Pawn(false);
+        board[6][1] = new Pawn(false);
+        board[6][2] = new Pawn(false);
+        board[6][3] = new Pawn(false);
+        board[6][4] = new Pawn(false);
+        board[6][5] = new Pawn(false);
+        board[6][6] = new Pawn(false);
+        board[6][7] = new Pawn(false);
+
+        Piece[][] test = cg.cloneBoard(board);
+
+        for (int row=0; row<8; row++) {
+            for (int col=0; col<8; col++) {
+                assertEquals(board[row][col], test[row][col]);
+            }
+        }
     }
     
 

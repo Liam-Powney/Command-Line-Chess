@@ -353,42 +353,23 @@ public class ChessGame extends GameState{
     //
     // BOARD CLONER
     //
-    private Piece[][] cloneBoard(Piece[][] board) {
+    public Piece[][] cloneBoard(Piece[][] board) {
         Piece[][] out = new Piece[8][8];
         for (int i=0; i<8; i++) {
             for (int j=0; j<8; j++) {
                 Piece square = board[i][j];
-                if (square==null) {
-                    out[i][j]=null;
-                }
-                else if (square instanceof Pawn) {
-                    Pawn p = (Pawn)square;
-                    out[i][j]= new Pawn(p);
-                }
-                else if (square instanceof Rook) {
-                    Rook r = (Rook)square;
-                    out[i][j]= new Rook(r);
-                }
-                else if (square instanceof Knight) {
-                    Knight k = (Knight)square;
-                    out[i][j]= new Knight(k);
-                }
-                else if (square instanceof Bishop) {
-                    Bishop b = (Bishop)square;
-                    out[i][j]= new Bishop(b);
-                }
-                else if (square instanceof King) {
-                    King k = (King)square;
-                    out[i][j]= new King(k);
-                }
-                else if (square instanceof Queen) {
-                    Queen q = (Queen)square;
-                    out[i][j]= new Queen(q);
-                }
+                if      (square instanceof Pawn)    {out[i][j]= new Pawn((Pawn)square);}
+                else if (square instanceof Rook)    {out[i][j]= new Rook((Rook)square);}
+                else if (square instanceof Knight)  {out[i][j]= new Knight((Knight)square);}
+                else if (square instanceof Bishop)  {out[i][j]= new Bishop((Bishop)square);}
+                else if (square instanceof King)    {out[i][j]= new King((King)square);}
+                else if (square instanceof Queen)   {out[i][j]= new Queen((Queen)square);}
             }
         }
         return out;
     }
+
+
     //
     // PGN STRING PARSER
     //
@@ -414,11 +395,10 @@ public class ChessGame extends GameState{
         }
     }
 
-    // TODO: Debug parser (command Qf2 is throwing error, decoding to incorrect end coordinates :L)
     // converts a command into a Move if possible
     public Move moveParser(String c) throws IllegalArgumentException {
         
-        String pieceType;
+        String pieceType=null;
         Integer startCol=null, startRow=null, endCol, endRow;
         boolean capture=false, check=false, checkmate=false;
         String promoPieceType=null;
@@ -453,7 +433,6 @@ public class ChessGame extends GameState{
                     else if (temp.charAt(2) == 'B') {promoPieceType = "bishop";}
                     c = c.substring(0, c.length()-3);
                 }
-                
             }
         }
         else if (ch0 == 'K' ) {pieceType = "king";}
@@ -481,6 +460,7 @@ public class ChessGame extends GameState{
             capture=true;
             c = c.substring(0, c.length()-1);
         }
+
         //disambiguation info
         if (c.length()==2) {
             try {
@@ -503,7 +483,7 @@ public class ChessGame extends GameState{
                 throw new IllegalArgumentException("The one disambiguation character given was invalid.");
             }
         }
-        else if (c.length()!=0){
+        else if (c.length()!=0) {
             throw new IllegalArgumentException("Input invalid");
         }
 

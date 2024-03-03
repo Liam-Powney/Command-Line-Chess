@@ -30,4 +30,16 @@ public abstract class Piece {
     public int[][][] getMoves() {return moves;}
 
     public void setMoved(Move m) {hasMoved = true;}
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this==obj) {return true;}
+        if (obj == null || getClass() != obj.getClass()) {return false;}
+        Piece p = (Piece)obj;
+        if (this.white==p.getWhite() &&
+            this.hasMoved==p.getHasMoved()) {
+                return true;
+            }
+        return false;
+    }
 }
