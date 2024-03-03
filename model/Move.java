@@ -25,10 +25,9 @@ public class Move {
     }
 
     // pawn move constructor (enter 'null' for promo piece type if no promo happening)
-    public Move(int endCol, int endRow, boolean capture, boolean check, boolean checkmate, String promoPieceType) {
+    public Move(Integer endCol, Integer endRow, Integer startCol, boolean capture, boolean check, boolean checkmate, String promoPieceType) {
         this.pieceType="pawn";
-        if (capture==false) {this.startCol=endCol;}
-        else {this.startCol=null;}
+        this.startCol=startCol;
         this.startRow=null;
         this.endCol=endCol;
         this.endRow=endRow;
@@ -39,22 +38,8 @@ public class Move {
         this.castleShort=null;
     }
 
-    // other piece move constructor
-    public Move(String pieceType, int endCol, int endRow, boolean capture, boolean check, boolean checkmate) {
-        this.pieceType=pieceType;
-        this.startCol=null;
-        this.startRow=null;
-        this.endCol=endCol;
-        this.endRow=endRow;
-        this.capture=capture;
-        this.check=check;
-        this.checkmate=checkmate;
-        this.promoPieceType=null;
-        this.castleShort=null;
-    }
-
     // other piece move constructor with start position info
-    public Move(String pieceType, int startCol, int startRow, int endCol, int endRow, boolean capture, boolean check, boolean checkmate) {
+    public Move(String pieceType, Integer startCol, Integer startRow, Integer endCol, Integer endRow, boolean capture, boolean check, boolean checkmate) {
         this.pieceType=pieceType;
         this.startCol=startCol;
         this.startRow=startRow;
@@ -68,7 +53,7 @@ public class Move {
     }
 
     // move cloner with added start position data and piece reference
-    public Move(Move m, int startCol, int startRow) {
+    public Move(Move m, Integer startCol, Integer startRow) {
         this.pieceType=m.getPieceType();
         this.startCol=startCol;
         this.startRow=startRow;
@@ -85,13 +70,10 @@ public class Move {
     public String getPieceType() {return pieceType;}
     public Integer getStartCol() {return startCol;}
     public Integer getStartRow() {return startRow;}
-    public int getEndCol() {return endCol;}
-    public int getEndRow() {return endRow;}
+    public Integer getEndCol() {return endCol;}
+    public Integer getEndRow() {return endRow;}
     public boolean getCapture() {return capture;}
     public boolean getCheck() {return check;}
     public boolean getCheckmate() {return checkmate;}
     public String getPromoPieceType() {return promoPieceType;}
-
-    //public void setStartCol(Integer s) {startCol = s;}
-    //public void setStartRow(Integer s) {startRow = s;}
 }

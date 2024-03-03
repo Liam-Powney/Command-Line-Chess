@@ -35,23 +35,46 @@ public class ChessGameTest {
     @ParameterizedTest
     @CsvSource({
         "e4, pawn, 4, , 4, 3, false, false, false, , ",
-        
+        "bxc4, pawn, 1, , 2, 3, true, false, false, , ",
+        "fxg8(Q), pawn, 5, , 6, 7, true, false, false, queen, ",
+        "bxc4+, pawn, 1, , 2, 3, true, true, false, , ",
+        "Ra1, rook, , , 0, 0, false, false, false, , ",
+        "Qxh8, queen, , , 7, 7, true, false, false, , ",
+        "Qfxa1, queen, 5, , 0, 0, true, false, false, , ",
+        "Rb3xc3, rook, 1, 2, 2, 2, true, false, false, , ",
+        "Ra1#, rook, , , 0, 0, false, false, true, , ",
+        "Qxh8+, queen, , , 7, 7, true, true, false, , ",
+        "0-0, , , , , , false, false, false, ,true ",
+        "0-0-0, , , , , , false, false, false, ,false ",
+        "0-0+, , , , , , false, true, false, ,true ",
+        "0-0-0#, , , , , , false, false, true, ,false ",
     })
     public void testPGNCommandParser(String input, String pieceType, Integer startCol, Integer startRow, Integer endCol, Integer endRow, boolean capture, boolean check, boolean checkmate, String promoPieceType, Boolean castleShort) {
-
         Move m = cg.moveParser(input);
-
         assertNotNull(m);
         assertEquals(pieceType, m.getPieceType());
         assertEquals(startCol, m.getStartCol());
         assertEquals(startRow, m.getStartRow());
-        assertEquals(endCol, m.getEndCol());
+        assertEquals(m.getEndCol(), endCol);
         assertEquals(endRow, m.getEndRow());
         assertEquals(capture, m.getCapture());
         assertEquals(check, m.getCheck());
         assertEquals(checkmate, m.getCheckmate());
         assertEquals(promoPieceType, m.getPromoPieceType());
         assertEquals(castleShort, m.getCastleShort());
+    }
+    @Test
+    public void testPGNCommandParserForErrors() {
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("askbkjbkjb"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Rxa9"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Qixa7"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Xxb3"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Nabab"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("xxa3+"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("(Q)"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("a3(Q)"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Rxa8(Q)"));
+        assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Kf6+#"));
     }
     
 

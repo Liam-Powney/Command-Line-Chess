@@ -442,7 +442,7 @@ public class ChessGame extends GameState{
         ch0 = c.charAt(0);
         if (ch0>='a' && ch0<='h') {
             pieceType = "pawn";
-            startCol=ch0-'a';
+            startCol=(Integer)(ch0-'a');
             // check if it's a pawn promo
             if (c.length()>3) {
                 String temp = c.substring(c.length()-4);
@@ -509,7 +509,7 @@ public class ChessGame extends GameState{
 
         // return the move :)
         if (pieceType.equals("pawn")) {
-            return new Move(endCol, endRow, capture, check, checkmate, promoPieceType);
+            return new Move(endCol, endRow, startCol, capture, check, checkmate, promoPieceType);
         }
         return new Move(pieceType, startCol, startRow, endCol, endRow, capture, check, checkmate);
     }
