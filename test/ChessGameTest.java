@@ -34,6 +34,27 @@ public class ChessGameTest {
         assertTrue(Arrays.equals(cg.targetCoords("aksjckienca389rg43ch4"), new int[] {7, 3}));
     }
 
+
+
+    @Test
+    public void testFENParser() {
+        ChessGame fenGame = new ChessGame("fen", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        assertEquals(fenGame.getWhitesTurn(), cg.getWhitesTurn());
+        assertEquals(fenGame.getWCastleS(), cg.getWCastleS());
+        assertEquals(fenGame.getWCastleL(), cg.getWCastleL());
+        assertEquals(fenGame.getBCastleS(), cg.getBCastleS());
+        assertEquals(fenGame.getBCastleL(), cg.getBCastleL());
+        assertEquals(fenGame.getHalfMove(), cg.getHalfMove());
+        assertEquals(fenGame.getFullMove(), cg.getFullMove());
+        for (int row=0; row<8; row++) {
+            for (int col=0; col<8; col++) {
+                assertEquals(fenGame.getBoard()[row][col], cg.getBoard()[row][col]);
+            }
+        }
+
+
+    }
+
     @ParameterizedTest
     @CsvSource({
         "e4, pawn, 4, , 4, 3, false, false, false, , ",
@@ -93,10 +114,10 @@ public class ChessGameTest {
     }
     @Test
     public void testGetKingCoords() {
-        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), cg.getWhitesTurn()), new int[] {3, 0}));
-        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), !cg.getWhitesTurn()), new int[] {3, 7}));
+        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), cg.getWhitesTurn()), new int[] {4, 0}));
+        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), !cg.getWhitesTurn()), new int[] {4, 7}));
         Piece[][] test = cg.cloneBoard(cg.getBoard());
-        test[0][3]=null;
+        test[0][4]=null;
         assertThrows(IllegalArgumentException.class, () -> cg.getKingsCoords(test, cg.getWhitesTurn()));
     }
 

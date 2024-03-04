@@ -1,39 +1,21 @@
 package model;
 
-import java.util.LinkedList;
+import java.util.Stack;
 
 public class Game {
     
-    private LinkedList<GameState> gamestateStack;
+    private Stack<GameState> gamestateStack;
 
     public Game() {
-        this.gamestateStack = new LinkedList<>();
-        gamestateStack.push(new WelcomeScreen());
+        this.gamestateStack = new Stack<>();
+        gamestateStack.push(new WelcomeScreen(this));
     }
 
-    public GameState getCurrentState() {return gamestateStack.getFirst();}
+    public GameState getCurrentState() {return gamestateStack.peek();}
 
-    public void goToWelcomeScreen() {
-        while(gamestateStack.size()>1) {
-            gamestateStack.pop();
-        }
-    }
+    public void startNewChessGame() {gamestateStack.push(new ChessGame());}
+    public void startNewChessGame(String notation, String in) {gamestateStack.push(new ChessGame(notation, in));}
+    public void goToWelcomeScreen() {while (gamestateStack.size()>1) {gamestateStack.pop();}}
+    public void goBack() {gamestateStack.pop();}
 
-    public void startNewChessGame() {
-        if (!(gamestateStack.getLast() instanceof WelcomeScreen)) {
-            goToWelcomeScreen();
-        }
-        gamestateStack.push(new ChessGame());
-    }
-
-    public void goToEndGame(Piece[][] board, boolean whiteWon) {
-        try {
-            if (!(gamestateStack.getFirst() instanceof ChessGame)) {
-                throw new Exception();
-            }
-        } catch (Exception e) {
-            System.out.println("Can't go to end game as we are not in a game right now.");
-        }
-        gamestateStack.push(new EndGame(board, whiteWon));
-    }
 }

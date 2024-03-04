@@ -26,12 +26,16 @@ public class View {
     }
 
     public void drawWelcomeScreen(WelcomeScreen w) {
-        System.out.println("Welcome to command line chess :) Please choose from the following options:\n" +
+        if (!w.getReceivingString()) {
+            System.out.println("Welcome to command line chess :) Please choose from the following options:\n" +
                                 "1 - New Game\n" +
                                 "2 - Input Game History\n" +
                                 "\n" +
                                 "For more information, please type 'help'\n");
-        if (w.getErrorMessage().length()>0) {System.out.println(w.getErrorMessage());}
+        }
+        else {
+            System.out.println("Please enter your pgn string:");
+        }
     }
 
     public void drawChessGame(ChessGame cg) {
@@ -60,7 +64,6 @@ public class View {
         outString+="\n    a  b  c  d  e  f  g  h";
 
         System.out.println(outString);
-        if (cg.getErrorMessage().length()>0) {System.out.println(cg.getErrorMessage());}
     }
 
     public void drawEndGame(EndGame eg) {

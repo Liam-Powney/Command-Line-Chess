@@ -34,7 +34,7 @@ public abstract class Piece {
     @Override
     public boolean equals(Object obj) {
         if (this==obj) {return true;}
-        if (obj == null || getClass() != obj.getClass()) {return false;}
+        if (obj==null || getClass()!=obj.getClass()) {return false;}
         Piece p = (Piece)obj;
         if (this.white==p.getWhite() &&
             this.hasMoved==p.getHasMoved()) {

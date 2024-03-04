@@ -7,18 +7,42 @@ public class ChessGame extends GameState{
     
     private Stack<Piece[][]> boardStack;
     private boolean whitesTurn;
+    private boolean wCastleS, wCastleL, bCastleS, bCastleL;
+    private int halfMove;
+    private int fullMove;
 
     // constructor - set up the board and pieces
     public ChessGame() {
         this.whitesTurn = true;
         this.boardStack = new Stack<Piece[][]>();
+        initialiseBoard();
+    }
+    public ChessGame(String notation, String in) {
+        this.boardStack = new Stack<Piece[][]>();
+        if (notation.equals("pgn")) {
+            this.whitesTurn = true;
+            initialiseBoard();
+            applyPGNMoves(in);
+        }
+        else if (notation.equals("fen")) {
+            createFENBoard(in);
+        }
+    }
+
+    private void initialiseBoard() {
+        this.halfMove=0;
+        this.fullMove=1;
+        this.wCastleS=true;
+        this.wCastleL=true;
+        this.bCastleS=true;
+        this.bCastleL=true;
         Piece[][] board = new Piece[8][8];
         // white pieces
         board[0][0] = new Rook(true);
         board[0][1] = new Knight(true);
         board[0][2] = new Bishop(true);
-        board[0][3] = new King(true);
-        board[0][4] = new Queen(true);
+        board[0][3] = new Queen(true);
+        board[0][4] = new King(true);
         board[0][5] = new Bishop(true);
         board[0][6] = new Knight(true);
         board[0][7] = new Rook(true);
@@ -34,8 +58,8 @@ public class ChessGame extends GameState{
         board[7][0] = new Rook(false);
         board[7][1] = new Knight(false);
         board[7][2] = new Bishop(false);
-        board[7][3] = new King(false);
-        board[7][4] = new Queen(false);
+        board[7][3] = new Queen(false);
+        board[7][4] = new King(false);
         board[7][5] = new Bishop(false);
         board[7][6] = new Knight(false);
         board[7][7] = new Rook(false);
@@ -50,16 +74,176 @@ public class ChessGame extends GameState{
 
         boardStack.push(board);
     }
+    private void applyPGNMoves(String pgn) throws IllegalArgumentException{
 
+        // process input
+        pgn.replaceAll("\\s+", " ");
+        String[] pgnA = pgn.split(" ");
+
+        for (int i=0; i<pgnA.length; i++) {
+            if (i%3==0 && !(pgnA[i].equals(Integer.toString((i/3)+1) + "."))) {
+                throw new IllegalArgumentException("your string contained an illegal move");
+            }
+            try {
+                if (i%3!=0) {
+                    attemptMove(pgnA[i]);
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("your string contained an illegal move");
+            }
+        }
+    }
+    private void createFENBoard(String fenString) throws IllegalArgumentException{
+        Piece[][] board = new Piece[8][8];
+        String[] fenStringA=fenString.split(" ");
+        if (fenStringA.length!=6) {throw new IllegalArgumentException();}
+
+        String[] boardString = fenStringA[0].split("/");
+        if (boardString.length!=8) {throw new IllegalArgumentException();}
+
+        for (int row=7; row>=0; row--) {
+            for (int col=0; col<8; col++) {
+                char c = boardString[-row+7].charAt(col);
+
+                switch (c) {
+                    case 'r':
+                    board[row][col]=new Rook(false);
+                        break;
+                    case 'n':
+                    board[row][col]=new Knight(false);
+                        break;
+                    case 'b':
+                    board[row][col]=new Bishop(false);
+                        break;
+                    case 'k':
+                    board[row][col]=new King(false);
+                        break;
+                    case 'q':
+                    board[row][col]=new Queen(false);
+                        break;
+                    case 'p':
+                    board[row][col]=new Pawn(false);
+                        break;
+                    case 'R':
+                    board[row][col]=new Rook(true);
+                        break;
+                    case 'N':
+                    board[row][col]=new Knight(true);
+                        break;
+                    case 'B':
+                    board[row][col]=new Bishop(true);
+                        break;
+                    case 'K':
+                    board[row][col]=new King(true);
+                        break;
+                    case 'Q':
+                    board[row][col]=new Queen(true);
+                        break;
+                    case 'P':
+                    board[row][col]=new Pawn(true);
+                        break;
+                    default:
+                        if (c>'0' && c<'9') {
+                            int blank = Character.valueOf(c);
+                            while (blank>0) {
+                                col++;
+                                if (col>7) {break;}
+                                blank--;
+                            }
+                        }
+                        else {
+                            throw new IllegalArgumentException();
+                        }
+                        break;
+                }
+            }
+        }
+
+        // who's turn is it?
+        if (fenStringA[1].equals("w")) {whitesTurn=true;}
+        else if (fenStringA[1].equals("b")) {whitesTurn=false;}
+        else {throw new IllegalArgumentException();}
+
+        // who can castle where?
+        if (fenStringA[2].length()>4||fenStringA[2].length()==0) {throw new IllegalArgumentException();}
+
+        this.wCastleS=false;
+        this.wCastleL=false;
+        this.bCastleS=false;
+        this.bCastleL=false;
+
+        for (int i=0; i<fenStringA[2].length(); i++) {
+            switch (fenStringA[2].charAt(i)) {
+                case 'K':
+                    if (wCastleS || wCastleL || bCastleS || bCastleL) {throw new IllegalArgumentException();}
+                    wCastleS=true;
+                    break;
+                case 'Q':
+                    if (wCastleL || bCastleS || bCastleL) {throw new IllegalArgumentException();}
+                    wCastleL=true;
+                    break;
+                case 'k':
+                    if (bCastleS || bCastleL) {throw new IllegalArgumentException();}
+                    bCastleS=true;
+                    break;
+                case 'q':
+                    if (bCastleL) {throw new IllegalArgumentException();}
+                    bCastleL=true;
+                    break;
+            
+                default:
+                    throw new IllegalArgumentException();
+            }
+        }
+
+        // any en passant flags?
+        if (fenStringA[3].length()>2) {throw new IllegalArgumentException();}
+        else if (fenStringA[3].length()==1 && !(fenStringA[3].equals("-"))) {throw new IllegalArgumentException();} 
+        else if ((fenStringA[3].length()==2)) {
+            int[] coords;
+            try {
+                coords = targetCoords(fenStringA[3]);
+            } catch (Exception e) {
+                throw new IllegalArgumentException(e.getMessage());
+            }
+            if (whitesTurn && board[coords[1]+1][coords[0]].getWhite()!=whitesTurn) {
+                if (board[coords[1]+1][coords[0]] instanceof Pawn && coords[1]==2 ) {
+                    ((Pawn)board[coords[1]+1][coords[0]]).setEnPassantable(true);
+                }
+            }
+            else {
+                if (board[coords[1]-1][coords[0]] instanceof Pawn && coords[1]==5 ) {
+                    ((Pawn)board[coords[1]-1][coords[0]]).setEnPassantable(true);
+                }
+            }
+        }
+
+        //half move and full move clocks
+        try {
+            halfMove = Integer.valueOf(fenStringA[4]);
+            fullMove = Integer.valueOf(fenStringA[5]);
+        } catch (Exception e) {
+            throw new IllegalArgumentException();
+        }
+
+        boardStack.push(board);
+    }
     //
     // GETTERS AND SETTERS
     //
     public Piece[][] getBoard() {return boardStack.peek();}
     public boolean getWhitesTurn() {return whitesTurn;}
+    public boolean getWCastleS() {return wCastleS;}
+    public boolean getWCastleL() {return wCastleL;}
+    public boolean getBCastleS() {return bCastleS;}
+    public boolean getBCastleL() {return bCastleL;}
+    public int getHalfMove() {return halfMove;}
+    public int getFullMove() {return fullMove;}
 
     //
-    // MOVE MAKER - this is the funciton the controller will call
+    // MOVE MAKER - this is the function the controller will call
     //
+    
     public void attemptMove(String input) throws IllegalArgumentException {
 
         // parse the instruction
@@ -274,7 +458,7 @@ public class ChessGame extends GameState{
     }
 
     // performs move m on current board and returns a new Piece[][] of the board of the resulting state
-    private Piece[][] performMove(Move m) {
+    public Piece[][] performMove(Move m) {
 
         // clone board for the output 
         Piece[][] out = cloneBoard(getBoard());
