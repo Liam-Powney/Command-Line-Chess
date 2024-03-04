@@ -120,6 +120,10 @@ public class ChessGameTest {
         test[0][4]=null;
         assertThrows(IllegalArgumentException.class, () -> cg.getKingsCoords(test, cg.getWhitesTurn()));
     }
-
+    @Test
+    public void testIsSquareInPieceCaptureRange() {
+        ChessGame fenGame = new ChessGame("fen", "rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
+        assertTrue(fenGame.isSquareInPieceCaptureRange(fenGame.getBoard(), 0, 0, 0, 3));
+    }
 
 }

@@ -100,63 +100,77 @@ public class ChessGame extends GameState{
 
         String[] boardString = fenStringA[0].split("/");
         if (boardString.length!=8) {throw new IllegalArgumentException();}
+        int row=7;
+        for (String rank : boardString) {
+            int col=0;
+            for (int i=0; i<rank.length(); i++) {
 
-        for (int row=7; row>=0; row--) {
-            for (int col=0; col<8; col++) {
-                char c = boardString[-row+7].charAt(col);
+                char c = boardString[-row+7].charAt(i);
 
                 switch (c) {
                     case 'r':
                     board[row][col]=new Rook(false);
+                    col++;
                         break;
                     case 'n':
                     board[row][col]=new Knight(false);
+                    col++;
                         break;
                     case 'b':
                     board[row][col]=new Bishop(false);
+                    col++;
                         break;
                     case 'k':
                     board[row][col]=new King(false);
+                    col++;
                         break;
                     case 'q':
                     board[row][col]=new Queen(false);
+                    col++;
                         break;
                     case 'p':
                     board[row][col]=new Pawn(false);
+                    col++;
                         break;
                     case 'R':
                     board[row][col]=new Rook(true);
+                    col++;
                         break;
                     case 'N':
                     board[row][col]=new Knight(true);
+                    col++;
                         break;
                     case 'B':
                     board[row][col]=new Bishop(true);
+                    col++;
                         break;
                     case 'K':
                     board[row][col]=new King(true);
+                    col++;
                         break;
                     case 'Q':
                     board[row][col]=new Queen(true);
+                    col++;
                         break;
                     case 'P':
                     board[row][col]=new Pawn(true);
+                    col++;
                         break;
                     default:
-                        if (c>'0' && c<'9') {
-                            int blank = Character.valueOf(c);
-                            while (blank>0) {
-                                col++;
-                                if (col>7) {break;}
-                                blank--;
-                            }
+                    int blank = c-'0';
+                    if (blank>0 && blank<9) {
+                        while (blank>0) {
+                            col++;
+                            blank--;
                         }
-                        else {
-                            throw new IllegalArgumentException();
-                        }
+                    }
+                    else {
+                        throw new IllegalArgumentException();
+                    }
                         break;
                 }
             }
+            row--;
         }
 
         // who's turn is it?
@@ -348,7 +362,7 @@ public class ChessGame extends GameState{
         for (int squareRow=0; squareRow<8; squareRow++) {
             for (int squareCol=0; squareCol<8; squareCol++) {
                 // search columns and rows only that we need to given any disambig data present in the move
-                if ( (pgn.getStartCol()==-1 || squareCol==pgn.getStartCol()) && (pgn.getStartRow()==-1 || squareRow==pgn.getStartRow()) ) {
+                if ( (pgn.getStartCol()==null || squareCol==pgn.getStartCol()) && (pgn.getStartRow()==null || squareRow==pgn.getStartRow()) ) {
                     Piece square = board[squareRow][squareCol];
                     // does the square have a piece on that is the correct colour and type?
                     if (square!=null && square.getType().equals(pgn.getPieceType()) && square.getWhite()==whitesTurn) {
@@ -403,12 +417,12 @@ public class ChessGame extends GameState{
     }
 
     // checks if a given square is in the CAPTURE range of a piece for a given board
-    private boolean isSquareInPieceCaptureRange(Piece[][] board, int pieceCol, int pieceRow, int squareCol, int squareRow) {
+    public boolean isSquareInPieceCaptureRange(Piece[][] board, int pieceCol, int pieceRow, int squareCol, int squareRow) {
 
         Piece p = board[pieceRow][pieceCol];
         if (p==null) {throw new IllegalArgumentException("There is no valid piece on those square co-ordinates :(");}
 
-        int[] moveVector = new int[] {pieceCol-squareCol, pieceRow-squareRow};
+        int[] moveVector = new int[] {squareCol-pieceCol, squareRow-pieceRow};
 
         int a=0;
         if (p instanceof Pawn) {a=1;}
@@ -442,7 +456,7 @@ public class ChessGame extends GameState{
     }
 
     // is the square [row][col] threatened by the enemy (colour !white)?
-    private boolean isSquareThreatened(Piece[][] board, int col, int row, boolean white) {
+    public boolean isSquareThreatened(Piece[][] board, int col, int row, boolean white) {
         // for every enemy piece
         for (int i=0; i<8; i++) {
             for (int j=0; j<8; j++) {
@@ -491,12 +505,12 @@ public class ChessGame extends GameState{
     }
 
     // says whether the white or black king (depending on whiteCheck bool input) is in check for a given board
-    private boolean checkChecker(Piece[][] board, boolean whitesKing) {
+    public boolean checkChecker(Piece[][] board, boolean whitesKing) {
         int[] kingCoords = getKingsCoords(board, whitesKing);
         return isSquareThreatened(board, kingCoords[0], kingCoords[1], whitesKing);
     }
 
-    private boolean checkmateChecker(Piece[][] board, boolean whitesKing) {
+    public boolean checkmateChecker(Piece[][] board, boolean whitesKing) {
 
         int[] kingCoords = getKingsCoords(board, whitesKing);
         int kingCol=kingCoords[0];
