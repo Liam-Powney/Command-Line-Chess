@@ -43,8 +43,7 @@ public class Controller {
             }
             else {
                 try {
-                    if (command.charAt(0)=='1') {game.startNewChessGame("pgn", command);}
-                    else {game.startNewChessGame("fen", command);}
+                    game.startNewChessGame(command);
                 } catch (Exception e) {
                     System.out.println("Not a valid pgn or fen string");
                     ws.setReceiveingString(false);

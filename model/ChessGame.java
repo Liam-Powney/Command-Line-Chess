@@ -10,6 +10,7 @@ public class ChessGame extends GameState{
     private boolean wCastleS, wCastleL, bCastleS, bCastleL;
     private int halfMove;
     private int fullMove;
+    private int[] enPassantSquare = new int[2];
 
     // constructor - set up the board and pieces
     public ChessGame() {
@@ -17,14 +18,14 @@ public class ChessGame extends GameState{
         this.boardStack = new Stack<Piece[][]>();
         initialiseBoard();
     }
-    public ChessGame(String notation, String in) {
+    public ChessGame(String in) {
         this.boardStack = new Stack<Piece[][]>();
-        if (notation.equals("pgn")) {
+        if (in.charAt(0)=='1') {
             this.whitesTurn = true;
             initialiseBoard();
             applyPGNMoves(in);
         }
-        else if (notation.equals("fen")) {
+        else {
             createFENBoard(in);
         }
     }
@@ -436,11 +437,11 @@ public class ChessGame extends GameState{
                 if (moves[i][j][0]==moveVector[0] && moves[i][j][1]==moveVector[1]) {
 
                     // for every increment in the direction for which there was a vector match
-                    for (int x=0; x<j; x++) {
+                    for (int x=0; x<j+1; x++) {
                         // square we are checking
                         Piece square = board[pieceRow+moves[i][x][1]][pieceCol+moves[i][x][0]];
                         // if it's the target square
-                        if (square==board[squareRow][squareCol]) {
+                        if (square==board[squareRow][squareCol] && (square==null || square.getWhite()!=p.getWhite())) {
                             return true;
                         }
                         // if it's a square inbetween
@@ -456,13 +457,13 @@ public class ChessGame extends GameState{
     }
 
     // is the square [row][col] threatened by the enemy (colour !white)?
-    public boolean isSquareThreatened(Piece[][] board, int col, int row, boolean white) {
+    public boolean isSquareThreatened(Piece[][] board, int c, int r, boolean white) {
         // for every enemy piece
-        for (int i=0; i<8; i++) {
-            for (int j=0; j<8; j++) {
-                Piece p = board[i][j];
+        for (int row=0; row<8; row++) {
+            for (int col=0; col<8; col++) {
+                Piece p = board[row][col];
                 if (p!=null && p.getWhite()!=white) {
-                    if (isSquareInPieceCaptureRange(board, col, row, j, i)) {
+                    if (isSquareInPieceCaptureRange(board, col, row, c, r)) {
                         return true;
                     }
                 }

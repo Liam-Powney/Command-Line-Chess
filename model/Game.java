@@ -14,7 +14,7 @@ public class Game {
     public GameState getCurrentState() {return gamestateStack.peek();}
 
     public void startNewChessGame() {gamestateStack.push(new ChessGame());}
-    public void startNewChessGame(String notation, String in) {gamestateStack.push(new ChessGame(notation, in));}
+    public void startNewChessGame(String in) {gamestateStack.push(new ChessGame(in));}
     public void goToWelcomeScreen() {while (gamestateStack.size()>1) {gamestateStack.pop();}}
     public void goBack() {gamestateStack.pop();}
 

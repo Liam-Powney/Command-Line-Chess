@@ -38,7 +38,7 @@ public class ChessGameTest {
 
     @Test
     public void testFENParser() {
-        ChessGame fenGame = new ChessGame("fen", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        ChessGame fenGame = new ChessGame("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         assertEquals(fenGame.getWhitesTurn(), cg.getWhitesTurn());
         assertEquals(fenGame.getWCastleS(), cg.getWCastleS());
         assertEquals(fenGame.getWCastleL(), cg.getWCastleL());
@@ -122,8 +122,33 @@ public class ChessGameTest {
     }
     @Test
     public void testIsSquareInPieceCaptureRange() {
-        ChessGame fenGame = new ChessGame("fen", "rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
+        ChessGame fenGame = new ChessGame("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
         assertTrue(fenGame.isSquareInPieceCaptureRange(fenGame.getBoard(), 0, 0, 0, 3));
+        fenGame = new ChessGame("rnbqkbnr/p1pppppp/8/8/8/1p6/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        assertTrue(fenGame.isSquareInPieceCaptureRange(fenGame.getBoard(), 0, 1, 1, 2));
+        fenGame = new ChessGame();
+        assertTrue(fenGame.isSquareInPieceCaptureRange(fenGame.getBoard(), 0, 1, 1, 2));
+        assertFalse(fenGame.isSquareInPieceCaptureRange(fenGame.getBoard(),0, 1, 0, 2));
+    }
+    @Test
+    public void testIsSquareInPieceMovingRange() {
+        ChessGame fenGame = new ChessGame();
+        assertTrue(fenGame.isSquareInPieceMovingRange(fenGame.getBoard(), 0, 1, 0, 2));
+        assertTrue(fenGame.isSquareInPieceCaptureRange(fenGame.getBoard(), 0, 1, 1, 2));
+        assertTrue(fenGame.isSquareInPieceMovingRange(fenGame.getBoard(), 0, 1, 0, 3));
+        fenGame = new ChessGame("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
+        assertTrue(fenGame.isSquareInPieceMovingRange(fenGame.getBoard(), 0, 0, 0, 7));
+        assertFalse(fenGame.isSquareInPieceMovingRange(fenGame.getBoard(), 3, 0, 4, 0));
+    }
+    @Test
+    public void testIsSquareThreatened() {
+        ChessGame fenGame = new ChessGame();
+        assertTrue(fenGame.isSquareThreatened(fenGame.getBoard(), 3, 2, false));
+        assertFalse(fenGame.isSquareThreatened(fenGame.getBoard(), 3, 2, true));
+        assertTrue(fenGame.isSquareThreatened(fenGame.getBoard(), 3, 5, true));
+        assertFalse(fenGame.isSquareThreatened(fenGame.getBoard(), 3, 5, false));
+        fenGame= new ChessGame("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
+        assertTrue(fenGame.isSquareThreatened(fenGame.getBoard(), 0, 7, false));
     }
 
 }
