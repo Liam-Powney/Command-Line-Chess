@@ -46,6 +46,7 @@ public class Controller {
                     game.startNewChessGame(command);
                 } catch (Exception e) {
                     System.out.println("Not a valid pgn or fen string");
+                } finally {
                     ws.setReceiveingString(false);
                 }
             }

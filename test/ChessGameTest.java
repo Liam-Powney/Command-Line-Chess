@@ -141,6 +141,8 @@ public class ChessGameTest {
         assertTrue(fenGame.isSquareInPieceMovingRange(fenGame.getBoard(), 0, 1, 0, 2));
         assertTrue(fenGame.isSquareInPieceCaptureRange(fenGame.getBoard(), 0, 1, 1, 2));
         assertTrue(fenGame.isSquareInPieceMovingRange(fenGame.getBoard(), 0, 1, 0, 3));
+        fenGame = new ChessGame("rnbqkbnr/8/8/8/8/P7/8/RNBQKBNR w KQkq - 0 1");
+        assertFalse(fenGame.isSquareInPieceMovingRange(fenGame.getBoard(), 0, 2, 0, 4));
         fenGame = new ChessGame("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
         assertTrue(fenGame.isSquareInPieceMovingRange(fenGame.getBoard(), 0, 0, 0, 7));
         assertFalse(fenGame.isSquareInPieceMovingRange(fenGame.getBoard(), 3, 0, 4, 0));
@@ -166,6 +168,13 @@ public class ChessGameTest {
         ChessGame fenGame = new ChessGame("rnbqkbnr/ppppp2p/5p2/6pQ/2N5/4P3/PPPP1PPP/R1B1KBNR w KQkq - 0 1");
         assertTrue(fenGame.checkmateChecker(fenGame.getBoard(), false));
         assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), true));
+        fenGame = new ChessGame("rnbqkbnr/8/8/8/8/P7/8/RNBQKBNR w KQkq - 0 1");
+        assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), true));
+        assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), false));
+        fenGame = new ChessGame("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1");
+        assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), true));
+        assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), false));
+
     }
     @Test
     public void testPossibleMovesDecoder() {

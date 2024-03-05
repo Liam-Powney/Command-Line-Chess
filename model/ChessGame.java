@@ -343,7 +343,7 @@ public class ChessGame extends GameState{
                                 continue;
                             }
                             // check the move correctly leaves the enemy in check/not in check as indicated in their PGN instruction
-                            if ( checkmateChecker(boardAfterMove, !bs.getWhitesTurn()) == pgn.getCheckmate() ) {
+                            if ( checkmateChecker(boardAfterMove, !bs.getWhitesTurn()) != pgn.getCheckmate() ) {
                                 continue;
                             }
                             // check the move correctly leaves the enemy in check/not in check as indicated in their PGN instruction
@@ -378,7 +378,7 @@ public class ChessGame extends GameState{
             for (int i=0; i<limit; i++) {
                 Piece square = board[pieceRow+moves[i][1]][pieceCol+moves[i][0]];
                 if (square!=null) {return false;}
-                if (square==board[squareRow][squareCol]) {
+                if ( (pieceRow+moves[i][1]==squareRow) && (pieceCol+moves[i][0]==squareCol)) {
                     return true;
                 }
             }
@@ -412,7 +412,7 @@ public class ChessGame extends GameState{
                         // square we are checking
                         Piece square = board[pieceRow+moves[i][x][1]][pieceCol+moves[i][x][0]];
                         // if it's the target square
-                        if (square==board[squareRow][squareCol] && (square==null || square.getWhite()!=p.getWhite())) {
+                        if ( (pieceRow+moves[i][x][1]==squareRow && pieceCol+moves[i][x][0]==squareCol) && (square==null || square.getWhite()!=p.getWhite())) {
                             return true;
                         }
                         // if it's a square inbetween
@@ -483,7 +483,7 @@ public class ChessGame extends GameState{
                 if ( i<0 || i>7 || j<0 || j>7) {continue;}
                 Piece square = board[i][j];
                 // for the king's square, empty squares, or squares with enemy pieces on them...
-                if ( (i==kingCol && j==kingRow) || square==null || square.getWhite()!=whitesKing) {
+                if ( (i==kingRow && j==kingCol) || square==null || square.getWhite()!=whitesKing) {
                     if (isSquareThreatened(board, j, i, whitesKing)) {
                         continue;
                     }
