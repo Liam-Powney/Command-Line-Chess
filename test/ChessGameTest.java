@@ -1,6 +1,8 @@
 package test;
 
 import org.junit.jupiter.api.Test;
+
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -8,6 +10,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Arrays;
 
+import model.BoardState;
 import model.ChessGame;
 import model.Move;
 import model.Piece;
@@ -16,6 +19,7 @@ import model.Piece;
 public class ChessGameTest {
     
     ChessGame cg = new ChessGame();
+    BoardState cgCBS = cg.getCBS();
 
     @Test
     public void testTargetCoords() {
@@ -39,13 +43,14 @@ public class ChessGameTest {
     @Test
     public void testFENParser() {
         ChessGame fenGame = new ChessGame("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        assertEquals(fenGame.getWhitesTurn(), cg.getWhitesTurn());
-        assertEquals(fenGame.getWCastleS(), cg.getWCastleS());
-        assertEquals(fenGame.getWCastleL(), cg.getWCastleL());
-        assertEquals(fenGame.getBCastleS(), cg.getBCastleS());
-        assertEquals(fenGame.getBCastleL(), cg.getBCastleL());
-        assertEquals(fenGame.getHalfMove(), cg.getHalfMove());
-        assertEquals(fenGame.getFullMove(), cg.getFullMove());
+        BoardState cbs = fenGame.getCBS();
+        assertEquals(cbs.getWhitesTurn(), cgCBS.getWhitesTurn());
+        assertEquals(cbs.getWCastleS(), cgCBS.getWCastleS());
+        assertEquals(cbs.getWCastleL(), cgCBS.getWCastleL());
+        assertEquals(cbs.getBCastleS(), cgCBS.getBCastleS());
+        assertEquals(cbs.getBCastleL(), cgCBS.getBCastleL());
+        assertEquals(cbs.getHalfMove(), cgCBS.getHalfMove());
+        assertEquals(cbs.getFullMove(), cgCBS.getFullMove());
         for (int row=0; row<8; row++) {
             for (int col=0; col<8; col++) {
                 assertEquals(fenGame.getBoard()[row][col], cg.getBoard()[row][col]);
@@ -114,11 +119,11 @@ public class ChessGameTest {
     }
     @Test
     public void testGetKingCoords() {
-        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), cg.getWhitesTurn()), new int[] {4, 0}));
-        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), !cg.getWhitesTurn()), new int[] {4, 7}));
+        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), cgCBS.getWhitesTurn()), new int[] {4, 0}));
+        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), !cgCBS.getWhitesTurn()), new int[] {4, 7}));
         Piece[][] test = cg.cloneBoard(cg.getBoard());
         test[0][4]=null;
-        assertThrows(IllegalArgumentException.class, () -> cg.getKingsCoords(test, cg.getWhitesTurn()));
+        assertThrows(IllegalArgumentException.class, () -> cg.getKingsCoords(test, cgCBS.getWhitesTurn()));
     }
     @Test
     public void testIsSquareInPieceCaptureRange() {
@@ -149,6 +154,22 @@ public class ChessGameTest {
         assertFalse(fenGame.isSquareThreatened(fenGame.getBoard(), 3, 5, false));
         fenGame= new ChessGame("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w KQkq - 0 1");
         assertTrue(fenGame.isSquareThreatened(fenGame.getBoard(), 0, 7, false));
+    }
+    @Test
+    public void testCheckChecker() {
+        ChessGame fenGame = new ChessGame("rnbqkbnr/ppppp2p/5p2/6pQ/2N5/4P3/PPPP1PPP/R1B1KBNR w KQkq - 0 1");
+        assertTrue(fenGame.checkChecker(fenGame.getBoard(), false));
+        assertFalse(fenGame.checkChecker(fenGame.getBoard(), true));
+    }
+    @Test
+    public void testCheckmateChecker() {
+        ChessGame fenGame = new ChessGame("rnbqkbnr/ppppp2p/5p2/6pQ/2N5/4P3/PPPP1PPP/R1B1KBNR w KQkq - 0 1");
+        assertTrue(fenGame.checkmateChecker(fenGame.getBoard(), false));
+        assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), true));
+    }
+    @Test
+    public void testPossibleMovesDecoder() {
+        
     }
 
 }

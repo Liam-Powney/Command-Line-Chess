@@ -1,81 +1,30 @@
 package model;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Stack;
 
 public class ChessGame extends GameState{
     
-    private Stack<Piece[][]> boardStack;
-    private boolean whitesTurn;
-    private boolean wCastleS, wCastleL, bCastleS, bCastleL;
-    private int halfMove;
-    private int fullMove;
-    private int[] enPassantSquare = new int[2];
+    private Stack<BoardState> boardStateStack;
 
     // constructor - set up the board and pieces
     public ChessGame() {
-        this.whitesTurn = true;
-        this.boardStack = new Stack<Piece[][]>();
-        initialiseBoard();
+        this.boardStateStack = new Stack<BoardState>();
+        boardStateStack.push(new BoardState());
     }
     public ChessGame(String in) {
-        this.boardStack = new Stack<Piece[][]>();
+        this.boardStateStack = new Stack<BoardState>();
         if (in.charAt(0)=='1') {
-            this.whitesTurn = true;
-            initialiseBoard();
-            applyPGNMoves(in);
+            boardStateStack.push(new BoardState());
+            applyBulkPGNMoves(in);
         }
         else {
             createFENBoard(in);
         }
     }
 
-    private void initialiseBoard() {
-        this.halfMove=0;
-        this.fullMove=1;
-        this.wCastleS=true;
-        this.wCastleL=true;
-        this.bCastleS=true;
-        this.bCastleL=true;
-        Piece[][] board = new Piece[8][8];
-        // white pieces
-        board[0][0] = new Rook(true);
-        board[0][1] = new Knight(true);
-        board[0][2] = new Bishop(true);
-        board[0][3] = new Queen(true);
-        board[0][4] = new King(true);
-        board[0][5] = new Bishop(true);
-        board[0][6] = new Knight(true);
-        board[0][7] = new Rook(true);
-        board[1][0] = new Pawn(true);
-        board[1][1] = new Pawn(true);
-        board[1][2] = new Pawn(true);
-        board[1][3] = new Pawn(true);
-        board[1][4] = new Pawn(true);
-        board[1][5] = new Pawn(true);
-        board[1][6] = new Pawn(true);
-        board[1][7] = new Pawn(true);
-        // black pieces
-        board[7][0] = new Rook(false);
-        board[7][1] = new Knight(false);
-        board[7][2] = new Bishop(false);
-        board[7][3] = new Queen(false);
-        board[7][4] = new King(false);
-        board[7][5] = new Bishop(false);
-        board[7][6] = new Knight(false);
-        board[7][7] = new Rook(false);
-        board[6][0] = new Pawn(false);
-        board[6][1] = new Pawn(false);
-        board[6][2] = new Pawn(false);
-        board[6][3] = new Pawn(false);
-        board[6][4] = new Pawn(false);
-        board[6][5] = new Pawn(false);
-        board[6][6] = new Pawn(false);
-        board[6][7] = new Pawn(false);
-
-        boardStack.push(board);
-    }
-    private void applyPGNMoves(String pgn) throws IllegalArgumentException{
+    private void applyBulkPGNMoves(String pgn) throws IllegalArgumentException{
 
         // process input
         pgn.replaceAll("\\s+", " ");
@@ -83,7 +32,7 @@ public class ChessGame extends GameState{
 
         for (int i=0; i<pgnA.length; i++) {
             if (i%3==0 && !(pgnA[i].equals(Integer.toString((i/3)+1) + "."))) {
-                throw new IllegalArgumentException("your string contained an illegal move");
+                throw new IllegalArgumentException("your pgn was formatted incorrectly");
             }
             try {
                 if (i%3!=0) {
@@ -94,7 +43,10 @@ public class ChessGame extends GameState{
             }
         }
     }
+
     private void createFENBoard(String fenString) throws IllegalArgumentException{
+
+        // what does the board look like?
         Piece[][] board = new Piece[8][8];
         String[] fenStringA=fenString.split(" ");
         if (fenStringA.length!=6) {throw new IllegalArgumentException();}
@@ -175,6 +127,7 @@ public class ChessGame extends GameState{
         }
 
         // who's turn is it?
+        boolean whitesTurn;
         if (fenStringA[1].equals("w")) {whitesTurn=true;}
         else if (fenStringA[1].equals("b")) {whitesTurn=false;}
         else {throw new IllegalArgumentException();}
@@ -182,10 +135,10 @@ public class ChessGame extends GameState{
         // who can castle where?
         if (fenStringA[2].length()>4||fenStringA[2].length()==0) {throw new IllegalArgumentException();}
 
-        this.wCastleS=false;
-        this.wCastleL=false;
-        this.bCastleS=false;
-        this.bCastleL=false;
+        boolean wCastleS=false;
+        boolean wCastleL=false;
+        boolean bCastleS=false;
+        boolean bCastleL=false;
 
         for (int i=0; i<fenStringA[2].length(); i++) {
             switch (fenStringA[2].charAt(i)) {
@@ -212,28 +165,20 @@ public class ChessGame extends GameState{
         }
 
         // any en passant flags?
+        int[] enPassantSquare=null;
         if (fenStringA[3].length()>2) {throw new IllegalArgumentException();}
         else if (fenStringA[3].length()==1 && !(fenStringA[3].equals("-"))) {throw new IllegalArgumentException();} 
         else if ((fenStringA[3].length()==2)) {
-            int[] coords;
             try {
-                coords = targetCoords(fenStringA[3]);
+                enPassantSquare = targetCoords(fenStringA[3]);
             } catch (Exception e) {
                 throw new IllegalArgumentException(e.getMessage());
-            }
-            if (whitesTurn && board[coords[1]+1][coords[0]].getWhite()!=whitesTurn) {
-                if (board[coords[1]+1][coords[0]] instanceof Pawn && coords[1]==2 ) {
-                    ((Pawn)board[coords[1]+1][coords[0]]).setEnPassantable(true);
-                }
-            }
-            else {
-                if (board[coords[1]-1][coords[0]] instanceof Pawn && coords[1]==5 ) {
-                    ((Pawn)board[coords[1]-1][coords[0]]).setEnPassantable(true);
-                }
             }
         }
 
         //half move and full move clocks
+        int halfMove;
+        int fullMove;
         try {
             halfMove = Integer.valueOf(fenStringA[4]);
             fullMove = Integer.valueOf(fenStringA[5]);
@@ -241,25 +186,24 @@ public class ChessGame extends GameState{
             throw new IllegalArgumentException();
         }
 
-        boardStack.push(board);
+        // push the new board state :)
+        boardStateStack.push(new BoardState(board, whitesTurn, wCastleS, wCastleL, bCastleS, bCastleL, halfMove, fullMove, enPassantSquare));
+        System.out.println(boardStateStack.peek().getWhitesTurn());
     }
     //
     // GETTERS AND SETTERS
     //
-    public Piece[][] getBoard() {return boardStack.peek();}
-    public boolean getWhitesTurn() {return whitesTurn;}
-    public boolean getWCastleS() {return wCastleS;}
-    public boolean getWCastleL() {return wCastleL;}
-    public boolean getBCastleS() {return bCastleS;}
-    public boolean getBCastleL() {return bCastleL;}
-    public int getHalfMove() {return halfMove;}
-    public int getFullMove() {return fullMove;}
+    public BoardState getCBS() {return boardStateStack.peek();}
+    public Piece[][] getBoard() {return boardStateStack.peek().getBoard();}
 
     //
     // MOVE MAKER - this is the function the controller will call
     //
     
     public void attemptMove(String input) throws IllegalArgumentException {
+
+        // get current board state to reference to later
+        BoardState cbs = boardStateStack.peek();
 
         // parse the instruction
         Move m;
@@ -269,42 +213,82 @@ public class ChessGame extends GameState{
             throw new IllegalArgumentException("That input is invalid. Reason give: " + e.getMessage());
         }
 
+        // create variables for new board state
+        Piece[][] newBoard = cloneBoard(getBoard());
+        boolean wCastleS = cbs.getWCastleS();
+        boolean wCastleL = cbs.getWCastleL();
+        boolean bCastleS = cbs.getBCastleS();
+        boolean bCastleL = cbs.getBCastleL();
+        int[] enPassantSquare = null;
+        int halfMove = cbs.getHalfMove();
+        int fullMove = cbs.getFullMove();
+
         // castling special case
-        if (m.getCastleShort()!=null) {attemptCastle(m); return;}
+        if (m.getCastleShort()!=null) {
+            try {
+                newBoard=attemptCastle(cbs, m);
+                if (cbs.getWhitesTurn()) {
+                    wCastleS=false;
+                    wCastleL=false;
+                }
+                else {
+                    bCastleS=false;
+                    bCastleL=false;
 
+                }
+            } catch (Exception e) {
+                System.out.println("Couldn't castle :()");
+            }
+        }
+        // Non-castling moves - checking against game logic:
         // check the instruction against game logic to ensure it only corresponds to one possible move for the current board
-        HashMap<Move, Piece[][]> moveList = possibleMovesForDecodedPGN(m, getBoard());
-        if (moveList.size()>1) {
-            throw new IllegalArgumentException("More than one piece can make that move!");
+        else {
+            HashMap<Move, Piece[][]> moveList = possibleMovesForDecodedPGN(m, cbs);
+            if (moveList.size()>1) {
+                throw new IllegalArgumentException("More than one piece can make that move!");
+            }
+            else if (moveList.size()==0) {
+                throw new IllegalArgumentException("No piece can make that move!");
+            }
+            Move currentMove = moveList.keySet().iterator().next();
+            newBoard = moveList.get(currentMove);
+            // TODO: if the move was a pawn double move, set the en passant square
+            // if it's a pawn push
+            if (cbs.getBoard()[m.getStartRow()][m.getStartCol()] instanceof Pawn && !m.getCapture()) {
+                // if the pawn is white and went from rank 2 to 4, set enPassant square
+                if (cbs.getBoard()[m.getStartRow()][m.getStartCol()].getWhite() && m.getEndRow()==3 && m.getStartRow()==1) {
+                    enPassantSquare= new int[] {m.getEndRow()-1, m.getEndCol()};
+                }
+                // if the pawn is black and pushed from rank 7 to 5, set enPassant square
+                else if (!(cbs.getBoard()[m.getStartRow()][m.getStartCol()].getWhite()) && m.getEndRow()==4 && m.getStartRow()==6) {
+                    enPassantSquare= new int[] {m.getEndRow()+1, m.getEndCol()};
+                }
+            }
+            //TODO: sort halfmove logic
+            // fullmove logic 
+            if (!cbs.getWhitesTurn()) {fullMove++;}
+            
+            if (currentMove.getCheckmate()) {
+                System.out.println("That's checkmate :)");
+                // TODO: go to end game somehow?
+            }
+            else if(currentMove.getCheck()) {
+                System.out.println("That's check :/");
+            }
         }
-        else if (moveList.size()==0) {
-            throw new IllegalArgumentException("No piece can make that move!");
-        }
-        Move currentMove = moveList.keySet().iterator().next();
-        Piece[][] newBoard = moveList.get(currentMove);
 
-        if (currentMove.getCheckmate()) {
-            System.out.println("That's checkmate :)");
-            // TODO: go to end game somehow?
-        }
-        else if(currentMove.getCheck()) {
-            System.out.println("That's check :/");
-        }
-
-        boardStack.push(newBoard);
-        boardStack.peek()[1][2]=null;
-        whitesTurn=!whitesTurn;
+        boardStateStack.push(new BoardState(newBoard, !cbs.getWhitesTurn(), wCastleS, wCastleL, bCastleS, bCastleL, halfMove, fullMove, enPassantSquare));
     }
 
     // special case - see if castling is valid and if so, perform it
-    private void attemptCastle(Move m) throws IllegalArgumentException {
+    private Piece[][] attemptCastle(BoardState cbs, Move m) throws IllegalArgumentException {
 
         int kingCol=3;
         int kingRow=0;
         int rookCol=0;
         int f=-1;
         // if it's black's move
-        if (!whitesTurn) {
+        if (!cbs.getWhitesTurn()) {
             kingRow=7;
         }
         // if we are castling long
@@ -320,7 +304,7 @@ public class ChessGame extends GameState{
 
             // for all the squares inbetween the king and the rook
             for (int i=kingCol; i>0||i<7; i+=(1*f)) {
-                if (isSquareThreatened(cb, i, kingRow, whitesTurn)) {
+                if (isSquareThreatened(cb, i, kingRow, cbs.getWhitesTurn())) {
                     throw new IllegalArgumentException("Can't castle out of/through check!");
                 }
                 if (i==kingCol) {continue;}
@@ -342,6 +326,8 @@ public class ChessGame extends GameState{
         newBoard[kingRow][kingCol+f]=newBoard[kingRow][rookCol];
         newBoard[kingRow][kingCol+f].setMoved(m);
         newBoard[kingRow][rookCol]=null;
+
+        return newBoard;
     }
 
 
@@ -355,7 +341,7 @@ public class ChessGame extends GameState{
     // Note: This function needs to make the moves on copies of the board in order to assess the legality of the outcome board (and hence the 
     // move itself). This is why the function returns a hashmap with new boards - the work is being done anyway so we may as well save the 
     // outcome to avoid repeated computation.
-    private HashMap<Move, Piece[][]> possibleMovesForDecodedPGN(Move pgn, Piece[][] board) {
+    public HashMap<Move, Piece[][]> possibleMovesForDecodedPGN(Move pgn, BoardState bs) {
 
         HashMap<Move, Piece[][]> out = new HashMap<Move, Piece[][]>();
 
@@ -364,24 +350,24 @@ public class ChessGame extends GameState{
             for (int squareCol=0; squareCol<8; squareCol++) {
                 // search columns and rows only that we need to given any disambig data present in the move
                 if ( (pgn.getStartCol()==null || squareCol==pgn.getStartCol()) && (pgn.getStartRow()==null || squareRow==pgn.getStartRow()) ) {
-                    Piece square = board[squareRow][squareCol];
+                    Piece square = bs.getBoard()[squareRow][squareCol];
                     // does the square have a piece on that is the correct colour and type?
-                    if (square!=null && square.getType().equals(pgn.getPieceType()) && square.getWhite()==whitesTurn) {
+                    if (square!=null && square.getType().equals(pgn.getPieceType()) && square.getWhite()==bs.getWhitesTurn()) {
                         // test the piece to see if it is in range of the target square
                         Move testMove = new Move(pgn, squareCol, squareRow);
-                        if (isSquareInPieceMovingRange(board, squareCol, squareRow, testMove.getEndCol(), testMove.getEndRow())) {
+                        if (isSquareInPieceMovingRange(bs.getBoard(), squareCol, squareRow, testMove.getEndCol(), testMove.getEndRow())) {
                             // create the board after the move
                             Piece[][] boardAfterMove = performMove(testMove);
                             // check the move doesn't leave the player in check
-                            if (checkChecker(boardAfterMove, whitesTurn)) {
+                            if (checkChecker(boardAfterMove, bs.getWhitesTurn())) {
                                 continue;
                             }
                             // check the move correctly leaves the enemy in check/not in check as indicated in their PGN instruction
-                            if ( checkmateChecker(boardAfterMove, !whitesTurn) == pgn.getCheckmate() ) {
+                            if ( checkmateChecker(boardAfterMove, !bs.getWhitesTurn()) == pgn.getCheckmate() ) {
                                 continue;
                             }
                             // check the move correctly leaves the enemy in check/not in check as indicated in their PGN instruction
-                            else if ( checkChecker(boardAfterMove, !whitesTurn) != pgn.getCheck() ) {
+                            else if ( checkChecker(boardAfterMove, !bs.getWhitesTurn()) != pgn.getCheck() ) {
                                 continue;
                             }
                             out.put(pgn, boardAfterMove);
@@ -477,19 +463,10 @@ public class ChessGame extends GameState{
 
         // clone board for the output 
         Piece[][] out = cloneBoard(getBoard());
-
-        // make all pawns non-enpassantable now
-        for (Piece[] row : out) {
-            for (Piece square : row) {
-                if (square!=null && square instanceof Pawn && ((Pawn)square).getEnPassantable()) {
-                    ((Pawn)square).setEnPassantable(false);
-                }
-            }
-        }
         
         // move the pieces
         /// if it's an enpassant move
-        if (m.getCapture() && m.getPieceType()=="pawn" && out[m.getEndRow()][m.getEndCol()]==null && out[m.getStartRow()][m.getEndCol()] instanceof Pawn && ((Pawn)out[m.getStartRow()][m.getEndCol()]).getEnPassantable()) {
+        if (m.getCapture() && m.getPieceType()=="pawn" && out[m.getEndRow()][m.getEndCol()]==null && Arrays.equals(boardStateStack.peek().getEnPassantSquare(), new int[] {m.getEndCol(), m.getStartRow()})) {
             out[m.getEndRow()][m.getEndCol()] = out[m.getStartRow()][m.getStartCol()];
             out[m.getStartRow()][m.getStartCol()] = null;
             out[m.getStartRow()][m.getEndCol()] = null;
