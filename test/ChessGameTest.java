@@ -72,10 +72,10 @@ public class ChessGameTest {
         "Rb3xc3, rook, 1, 2, 2, 2, true, false, false, , ",
         "Ra1#, rook, , , 0, 0, false, false, true, , ",
         "Qxh8+, queen, , , 7, 7, true, true, false, , ",
-        "0-0, , , , , , false, false, false, ,true ",
-        "0-0-0, , , , , , false, false, false, ,false ",
-        "0-0+, , , , , , false, true, false, ,true ",
-        "0-0-0#, , , , , , false, false, true, ,false ",
+        "O-O, , , , , , false, false, false, ,true ",
+        "O-O-O, , , , , , false, false, false, ,false ",
+        "O-O+, , , , , , false, true, false, ,true ",
+        "O-O-O#, , , , , , false, false, true, ,false ",
     })
     public void testPGNCommandParser(String input, String pieceType, Integer startCol, Integer startRow, Integer endCol, Integer endRow, boolean capture, boolean check, boolean checkmate, String promoPieceType, Boolean castleShort) {
         Move m = cg.moveParser(input);
@@ -162,6 +162,9 @@ public class ChessGameTest {
         ChessGame fenGame = new ChessGame("rnbqkbnr/ppppp2p/5p2/6pQ/2N5/4P3/PPPP1PPP/R1B1KBNR w KQkq - 0 1");
         assertTrue(fenGame.checkChecker(fenGame.getBoard(), false));
         assertFalse(fenGame.checkChecker(fenGame.getBoard(), true));
+        fenGame = new ChessGame("r1b2rk1/ppp1ppbp/3q1Np1/8/1np1P3/5Q2/PBPPNPPP/2KR3R b - - 0 10");
+        assertTrue(fenGame.checkChecker(fenGame.getBoard(), false));
+        assertFalse(fenGame.checkChecker(fenGame.getBoard(), true));
     }
     @Test
     public void testCheckmateChecker() {
@@ -174,11 +177,29 @@ public class ChessGameTest {
         fenGame = new ChessGame("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1");
         assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), true));
         assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), false));
+        fenGame = new ChessGame("r1b2rk1/ppp1ppbp/3q1Np1/8/1np1P3/5Q2/PBPPNPPP/2KR3R b - - 0 10");
+        assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), false));
+        assertFalse(fenGame.checkmateChecker(fenGame.getBoard(), true));
 
     }
     @Test
-    public void testPossibleMovesDecoder() {
-        
+    public void testBulkPGNMoveMaker() {
+        ChessGame fen = new ChessGame("r1b2rk1/ppp1pp1p/3q1bp1/8/1np1P3/5Q2/PBPPNPPP/2KR3R w - - 0 11");
+        BoardState fbs = fen.getCBS();
+        ChessGame pgn = new ChessGame("1. e4 d5 2. Qf3 Nf6 3. b4 g6 4. Bc4 Bg7 5. Bb2 O-O 6. Ne2 Qd6 7. Nbc3 Nc6 8. O-O-O dxc4 9. Nd5 Nxb4 10. Nxf6+ Bxf6");
+        BoardState pbs = pgn.getCBS();
+        assertEquals(fbs.getWhitesTurn(), pbs.getWhitesTurn());
+        assertEquals(fbs.getWCastleS(), pbs.getWCastleS());
+        assertEquals(fbs.getWCastleL(), pbs.getWCastleL());
+        assertEquals(fbs.getBCastleS(), pbs.getBCastleS());
+        assertEquals(fbs.getBCastleL(), pbs.getBCastleL());
+        assertEquals(fbs.getHalfMove(), pbs.getHalfMove());
+        assertEquals(fbs.getFullMove(), pbs.getFullMove());
+        for (int row=0; row<8; row++) {
+            for (int col=0; col<8; col++) {
+                assertEquals(fbs.getBoard()[row][col], pbs.getBoard()[row][col]);
+            }
+        }
     }
 
 }

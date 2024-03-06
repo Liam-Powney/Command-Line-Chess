@@ -39,7 +39,7 @@ public class ChessGame extends GameState{
                     attemptMove(pgnA[i]);
                 }
             } catch (Exception e) {
-                throw new IllegalArgumentException("your string contained an illegal move");
+                throw new IllegalArgumentException("your string contained the illegal move " + pgnA[i]);
             }
         }
     }
@@ -158,7 +158,8 @@ public class ChessGame extends GameState{
                     if (bCastleL) {throw new IllegalArgumentException();}
                     bCastleL=true;
                     break;
-            
+                case '-':
+                    continue;
                 default:
                     throw new IllegalArgumentException();
             }
@@ -188,7 +189,6 @@ public class ChessGame extends GameState{
 
         // push the new board state :)
         boardStateStack.push(new BoardState(board, whitesTurn, wCastleS, wCastleL, bCastleS, bCastleL, halfMove, fullMove, enPassantSquare));
-        System.out.println(boardStateStack.peek().getWhitesTurn());
     }
     //
     // GETTERS AND SETTERS
@@ -226,16 +226,16 @@ public class ChessGame extends GameState{
         // castling special case
         if (m.getCastleShort()!=null) {
 
-            if ( cbs.getWhitesTurn() && (m.getCastleShort()==cbs.getWCastleS() || m.getCastleShort()!=cbs.getWCastleL())) {throw new IllegalArgumentException("White has no casting priviledges!");}
-            if (!cbs.getWhitesTurn() && (m.getCastleShort()==cbs.getBCastleS() || m.getCastleShort()!=cbs.getBCastleL())) {throw new IllegalArgumentException("Black has no casting priviledges!");}
+            if ( cbs.getWhitesTurn() && ( (m.getCastleShort() && !cbs.getWCastleS()) || (!m.getCastleShort() && !cbs.getWCastleL()) ) ) {throw new IllegalArgumentException("White has no casting priviledges!");}
+            if (!cbs.getWhitesTurn() && ( (m.getCastleShort() && !cbs.getBCastleS()) || (!m.getCastleShort() && !cbs.getBCastleL()) ) ) {throw new IllegalArgumentException("Black has no casting priviledges!");}
 
             // logic for determining rook and king coords based off
-            int kingCol=3, kingRow=0, rookCol=0, f=-1;
+            int kingCol=4, kingRow=0, rookCol=0, f=1;
             if (!cbs.getWhitesTurn()) { kingRow=7; }
-            if (!m.getCastleShort()) { rookCol=7; f=1; }
+            if (!m.getCastleShort()) { rookCol=7; f=-1; }
 
             // ensure the king is not in check and will not be castling through check, and the squares between the king and rook and clear
-            for (int i=kingCol; i>0||i<7; i+=(1*f)) {
+            for (int i=kingCol; i>0&&i<7; i+=(1*f)) {
                 if (isSquareThreatened(cbs.getBoard(), i, kingRow, cbs.getWhitesTurn())) {
                     throw new IllegalArgumentException("Can't castle out of/through check!");
                 }
@@ -265,11 +265,11 @@ public class ChessGame extends GameState{
             else if (moveList.size()==0) {
                 throw new IllegalArgumentException("No piece can make that move!");
             }
-            Move currentMove = moveList.keySet().iterator().next();
-            newBoard = moveList.get(currentMove);
-            // TODO: if the move was a pawn double move, set the en passant square
-            // if it's a pawn push
-            if (cbs.getBoard()[m.getStartRow()][m.getStartCol()] instanceof Pawn && !m.getCapture()) {
+            m = moveList.keySet().iterator().next();
+            newBoard = moveList.get(m);
+
+            // setting en passant square
+            if (newBoard[m.getEndRow()][m.getEndCol()] instanceof Pawn && !m.getCapture()) {
                 // if the pawn is white and went from rank 2 to 4, set enPassant square
                 if (cbs.getBoard()[m.getStartRow()][m.getStartCol()].getWhite() && m.getEndRow()==3 && m.getStartRow()==1) {
                     enPassantSquare= new int[] {m.getEndRow()-1, m.getEndCol()};
@@ -279,21 +279,21 @@ public class ChessGame extends GameState{
                     enPassantSquare= new int[] {m.getEndRow()+1, m.getEndCol()};
                 }
             }
+
+            // Castling flags logic - no need to check for piece colour as this has been done during game logic above
+            if (cbs.getWhitesTurn() && m.getStartRow()==0) {
+                if (m.getStartCol()==0 && m.getPieceType().equals("rook")) {wCastleS=false;}
+                else if (m.getStartCol()==7 && m.getPieceType().equals("rook")) {wCastleL=false;}
+                else if(m.getStartCol()==4 && m.getPieceType().equals("king")) {wCastleS=false; wCastleL=false;}
+            }
+            if (!cbs.getWhitesTurn() && m.getStartRow()==7) {
+                if (m.getStartCol()==0 && m.getPieceType().equals("rook")) {bCastleS=false;}
+                else if (m.getStartCol()==7 && m.getPieceType().equals("rook")) {bCastleL=false;}
+                else if(m.getStartCol()==4 && m.getPieceType().equals("king")) {bCastleS=false; bCastleL=false;}
+            }
         }
 
-        // Castling flags logic - no need to check for piece colour as this has been done during game logic above
-        if (cbs.getWhitesTurn() && m.getStartRow()==0) {
-            if (m.getStartCol()==0 && m.getPieceType().equals("rook")) {wCastleS=false;}
-            else if (m.getStartCol()==7 && m.getPieceType().equals("rook")) {wCastleL=false;}
-            else if(m.getStartCol()==4 && m.getPieceType().equals("king")) {wCastleS=false; wCastleL=false;}
-        }
-        if (!cbs.getWhitesTurn() && m.getStartRow()==7) {
-            if (m.getStartCol()==0 && m.getPieceType().equals("rook")) {bCastleS=false;}
-            else if (m.getStartCol()==7 && m.getPieceType().equals("rook")) {bCastleL=false;}
-            else if(m.getStartCol()==4 && m.getPieceType().equals("king")) {bCastleS=false; bCastleL=false;}
-        }
-
-        if (m.getCapture() || m.getPieceType().equals("pawn")) {halfMove=0;}
+        if (m.getCapture() || (m.getPieceType()!=null && m.getPieceType().equals("pawn"))) {halfMove=0;}
         else {halfMove++;}
         if (halfMove==100) {}//TODO: It's a draw :)
         // fullmove logic 
@@ -343,14 +343,14 @@ public class ChessGame extends GameState{
                                 continue;
                             }
                             // check the move correctly leaves the enemy in check/not in check as indicated in their PGN instruction
-                            if ( checkmateChecker(boardAfterMove, !bs.getWhitesTurn()) != pgn.getCheckmate() ) {
+                            if ( checkmateChecker(boardAfterMove, !bs.getWhitesTurn()) != testMove.getCheckmate() ) {
                                 continue;
                             }
                             // check the move correctly leaves the enemy in check/not in check as indicated in their PGN instruction
-                            else if ( checkChecker(boardAfterMove, !bs.getWhitesTurn()) != pgn.getCheck() ) {
+                            else if ( checkChecker(boardAfterMove, !bs.getWhitesTurn()) != testMove.getCheck() ) {
                                 continue;
                             }
-                            out.put(pgn, boardAfterMove);
+                            out.put(testMove, boardAfterMove);
                         }
                     }
                 }
@@ -573,8 +573,8 @@ public class ChessGame extends GameState{
         }
 
         // see if move is castling
-        if (c.equals("0-0-0")) {return new Move(false, check, checkmate);}
-        else if (c.equals("0-0")) {return new Move(true, check, checkmate);}
+        if (c.equals("O-O-O")) {return new Move(false, check, checkmate);}
+        else if (c.equals("O-O")) {return new Move(true, check, checkmate);}
 
         // piece type?
         ch0 = c.charAt(0);
