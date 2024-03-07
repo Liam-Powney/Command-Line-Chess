@@ -23,7 +23,19 @@ public class Move {
         this.promoPieceType=null;
         this.castleShort = castleShort;
     }
-
+    // generic move constructor - used for game logic
+    public Move(String pieceType, Integer startCol, Integer startRow, Integer endCol, Integer endRow, boolean capture) {
+        this.pieceType=pieceType;
+        this.startCol=startCol;
+        this.startRow=startRow;
+        this.endCol=endCol;
+        this.endRow=endRow;
+        this.capture=capture;
+        this.check = false;
+        this.checkmate = false;
+        this.promoPieceType=null;
+        this.castleShort = null;
+    }
     // pawn move constructor (enter 'null' for promo piece type if no promo happening)
     public Move(Integer endCol, Integer endRow, Integer startCol, boolean capture, boolean check, boolean checkmate, String promoPieceType) {
         this.pieceType="pawn";

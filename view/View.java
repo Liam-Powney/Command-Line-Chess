@@ -62,6 +62,7 @@ public class View {
             }
         }
         outString+="\n    a  b  c  d  e  f  g  h";
+        outString+="\n\n White's turn: " + cg.getCBS().getWhitesTurn() + ", WCastleRights: " + cg.getCBS().getWCastleS() + " " + cg.getCBS().getWCastleL() + ", BCastleRights: " + cg.getCBS().getBCastleS() + " " + cg.getCBS().getBCastleL() + ", " + cg.getCBS().getHalfMove() + " " + cg.getCBS().getFullMove();
 
         System.out.println(outString);
     }
