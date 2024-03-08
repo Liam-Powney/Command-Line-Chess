@@ -55,29 +55,45 @@ public class Controller {
         // chessgame command parser
         else if (cs instanceof ChessGame) {
             ChessGame cg = (ChessGame) cs;
-            // parse command
-            try {
-                cg.attemptMove(command);
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
+            if (cg.getResult()==null) {
+                switch (command) {
+                    case "undo":
+                        cg.undo();
+                        break;
+                    case "redo":
+                        cg.redo();
+                        break;
+                
+                    default:
+                    try {
+                        cg.attemptMove(command);
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                        break;
+                }
             }
-        }
+            else {
+                if (cg.getResult().equals("white")) {
 
-        // endgame command parser
-        else if (cs instanceof EndGame) {
-            //EndGame eg=(EndGame)cs;
-            switch (command) {
-                // start new game
-                case "1":
-                    game.goToWelcomeScreen();
-                    game.startNewChessGame();
-                    break;
-                    // go to welcome screen
-                case "2":
-                    game.goToWelcomeScreen();
-                    break;
-                default:
-                    break;
+                }
+                else if (cg.getResult().equals("black")) {
+
+                }
+                else if (cg.getResult().equals("draw")) {
+
+                }
+                switch (command) {
+                    case "1":
+                        game.goToWelcomeScreen();
+                        break;
+                    case "2":
+                        game.startNewChessGame();
+                        break;
+                    default:
+                        break;
+                }
+
             }
         }
     }

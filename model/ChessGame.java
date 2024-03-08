@@ -8,16 +8,20 @@ import java.util.Stack;
 public class ChessGame extends GameState{
     
     private Stack<BoardState> boardStateStack;
+    private Stack<BoardState> undoStack;
+    private String result;
 
     //
     // CONSTRUCTORS
     // 
     public ChessGame() {
         this.boardStateStack = new Stack<BoardState>();
+        this.undoStack = new Stack<BoardState>();
         boardStateStack.push(new BoardState());
     }
     public ChessGame(String in) {
         this.boardStateStack = new Stack<BoardState>();
+        this.undoStack = new Stack<BoardState>();
         if (in.charAt(0)=='1') {
             boardStateStack.push(new BoardState());
             applyBulkPGNMoves(in);
@@ -34,16 +38,9 @@ public class ChessGame extends GameState{
         String[] pgnA = pgn.split(" ");
 
         for (int i=0; i<pgnA.length; i++) {
-            if (i%3==0 && !(pgnA[i].equals(Integer.toString((i/3)+1) + "."))) {
-                throw new IllegalArgumentException("your pgn was formatted incorrectly");
-            }
-            try {
-                if (i%3!=0) {
-                    attemptMove(pgnA[i]);
-                }
-            } catch (Exception e) {
-                throw new IllegalArgumentException("your string contained the illegal move " + pgnA[i]);
-            }
+            if (i%3==0 && !(pgnA[i].equals(Integer.toString((i/3)+1) + "."))) {throw new IllegalArgumentException("your pgn was formatted incorrectly");}
+            try {if (i%3!=0) {attemptMove(pgnA[i]);}}
+            catch (Exception e) {throw new IllegalArgumentException("your string contained the illegal move " + pgnA[i]);}
         }
     }
 
@@ -162,6 +159,7 @@ public class ChessGame extends GameState{
                     bCastleL=true;
                     break;
                 case '-':
+                    if ( i!=0 || fenStringA[2].length()>1) {throw new IllegalArgumentException("Illegal castling rights string (char '-' can only appear alone)");}
                     continue;
                 default:
                     throw new IllegalArgumentException("Castling rights string contained illegal character '" + fenStringA[2].charAt(i) + "'");
@@ -200,6 +198,7 @@ public class ChessGame extends GameState{
     //
     public BoardState getCBS() {return boardStateStack.peek();}
     public Piece[][] getBoard() {return boardStateStack.peek().getBoard();}
+    public String getResult() {return result;}
 
     public ArrayList<int[]> getPieceCoords(Piece[][] board, boolean white) {
         ArrayList<int[]> out = new ArrayList<int[]>();
@@ -221,6 +220,18 @@ public class ChessGame extends GameState{
             }
         }
         throw new IllegalArgumentException("I couldn't find a king on the board??! :S");
+    }
+
+    public void undo() {
+        if (boardStateStack.size()<2) {return;}
+        undoStack.push(boardStateStack.peek());
+        boardStateStack.pop();
+    }
+
+    public void redo() {
+        if (undoStack.size()<1) {return;}
+        boardStateStack.push(undoStack.peek());
+        undoStack.pop();
     }
 
     //
@@ -313,13 +324,19 @@ public class ChessGame extends GameState{
         if (!cbs.getWhitesTurn()) {fullMove++;}
 
         boardStateStack.push(new BoardState(newBoard, !cbs.getWhitesTurn(), wCastleS, wCastleL, bCastleS, bCastleL, halfMove, fullMove, enPassantSquare));
+        undoStack.clear();
         cbs = boardStateStack.peek();
 
         // state checkers (check, checkmate, stalemate, halfmove count)
-        if (halfMove==100) {}//TODO: It's a draw :)
-        if (checkmateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {System.out.println("Checkmate!");} // TODO: It's checkmate
-        else if (checkChecker(cbs.getBoard(), cbs.getWhitesTurn())) {System.out.println("Check!");} // TODO: It's check
-        else if (stalemateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {System.out.println("Draw!");} // TODO: It's stalemate
+        if (checkmateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {
+            if (cbs.getWhitesTurn()) {result="white";}
+            else {result="black";}
+            System.out.println("Checkmate!");
+        }
+        else if (checkChecker(cbs.getBoard(), cbs.getWhitesTurn())) {System.out.println("Check!");}
+        else if (halfMove==100 || stalemateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {
+            result="draw";
+            System.out.println("Draw!");}
     }
 
 
@@ -351,7 +368,6 @@ public class ChessGame extends GameState{
                 try {
                     boardAfterMove=isMoveLegal(bs.getBoard(), bs.getWhitesTurn(), pieceCoords[0], pieceCoords[1], pgn.getEndCol(), pgn.getEndRow(), bs.getEnPassantSquare());
                 } catch (Exception e) {
-                    System.out.println("possibleMovesForDecodedPGN - requested move for piece on coords c=" + pieceCoords[0] + " r=" + pieceCoords[1] + "illegal. Reason given: " + e.getMessage());
                     continue;
                 }
                 // ensure the move is corerctly labelled with capture, check, and checkmate info
@@ -547,6 +563,8 @@ public class ChessGame extends GameState{
         for (int[] pieceCoords : getPieceCoords(board, white)) {
             if (canPieceMove(board, pieceCoords[0], pieceCoords[1], enPassantSquare)) {return false;}
         }
+        // TODO can player castle? Does this need to be checked for? If player can castle then king must also be able to
+        // move 1 square in direction of castling, hence no stalemate
         return true;
     }
 
@@ -567,7 +585,7 @@ public class ChessGame extends GameState{
                     testBoard=isMoveLegal(board, p.getWhite(), col, row, col+moves[direction][increment][0], row+moves[direction][increment][1], enPassantSquare);
                     return true;
                 } catch (Exception e) {
-                    if (board[ row+moves[direction][increment][1]][col+moves[direction][increment][0]]==null) {
+                    if (board[row+moves[direction][increment][1]][col+moves[direction][increment][0]]==null) {
                         continue;
                     }
                     break;

@@ -20,7 +20,7 @@ public class View {
     }
 
     public void draw(GameState gs) {
-        //clearScreen();
+        clearScreen();
         if (gs instanceof WelcomeScreen) {drawWelcomeScreen((WelcomeScreen)gs);}
         else if (gs instanceof ChessGame) {drawChessGame((ChessGame)gs);}
     }
@@ -62,17 +62,24 @@ public class View {
             }
         }
         outString+="\n    a  b  c  d  e  f  g  h";
-        outString+="\n\n White's turn: " + cg.getCBS().getWhitesTurn() + ", WCastleRights: " + cg.getCBS().getWCastleS() + " " + cg.getCBS().getWCastleL() + ", BCastleRights: " + cg.getCBS().getBCastleS() + " " + cg.getCBS().getBCastleL() + ", " + cg.getCBS().getHalfMove() + " " + cg.getCBS().getFullMove();
-
+        outString+="\n\n";
+        if (cg.getResult()==null) {
+            if (cg.getCBS().getWhitesTurn()) {outString+="White";}
+        else {outString+="Black";}
+        outString+=" to move";
+        }
+        else (cg.getResult()!=null) {
+            if (cg.getResult().equals("draw")) {
+                outString+="It's a draw!";
+            }
+            else {
+                if (cg.getResult().equals("white")) {outString+="White";}
+                else if(cg.getResult().equals("black")) {outString+="Black";}
+                outString+=" wins!";
+            }
+            outString+="\n\nWhat would you like to do?\n\n1 - Go to Main Menu\n2 - Start new game\nexit - close program";
+        }
         System.out.println(outString);
-    }
-
-    public void drawEndGame(EndGame eg) {
-        String out="";
-        if (eg.getWhiteWon()) {out+="White";}
-        else {out+="Black";}
-        out+=" won! \n\n What would you like to do?\n\n 1 - Play again\n2 - Exit\n";
-        System.out.println(out);
     }
 
     public void clearScreen() {
