@@ -15,11 +15,13 @@ public class ChessGame extends GameState{
     // CONSTRUCTORS
     // 
     public ChessGame() {
+        super();
         this.boardStateStack = new Stack<BoardState>();
         this.undoStack = new Stack<BoardState>();
         boardStateStack.push(new BoardState());
     }
     public ChessGame(String in) {
+        super();
         this.boardStateStack = new Stack<BoardState>();
         this.undoStack = new Stack<BoardState>();
         if (in.charAt(0)=='1') {
@@ -563,8 +565,6 @@ public class ChessGame extends GameState{
         for (int[] pieceCoords : getPieceCoords(board, white)) {
             if (canPieceMove(board, pieceCoords[0], pieceCoords[1], enPassantSquare)) {return false;}
         }
-        // TODO can player castle? Does this need to be checked for? If player can castle then king must also be able to
-        // move 1 square in direction of castling, hence no stalemate
         return true;
     }
 
@@ -580,9 +580,8 @@ public class ChessGame extends GameState{
                 int endCol = col+moves[direction][increment][0];
                 int endRow = row+moves[direction][increment][1];
                 if ( endCol <0 || endCol>7 || endRow<0 || endRow>7 ) {break;}
-                Piece[][] testBoard;
                 try {
-                    testBoard=isMoveLegal(board, p.getWhite(), col, row, col+moves[direction][increment][0], row+moves[direction][increment][1], enPassantSquare);
+                    Piece[][] testBoard=isMoveLegal(board, p.getWhite(), col, row, col+moves[direction][increment][0], row+moves[direction][increment][1], enPassantSquare);
                     return true;
                 } catch (Exception e) {
                     if (board[row+moves[direction][increment][1]][col+moves[direction][increment][0]]==null) {

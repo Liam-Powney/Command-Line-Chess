@@ -5,6 +5,7 @@ public class WelcomeScreen extends GameState{
     private boolean receivingString;
 
     public WelcomeScreen(Game game) {
+        super();
         receivingString=false;
     }
 

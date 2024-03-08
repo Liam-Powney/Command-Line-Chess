@@ -26,16 +26,26 @@ public class View {
     }
 
     public void drawWelcomeScreen(WelcomeScreen w) {
+        String outString = "";
         if (!w.getReceivingString()) {
-            System.out.println("Welcome to command line chess :) Please choose from the following options:\n" +
+            outString+="Welcome to command line chess :) Please choose from the following options:\n" +
                                 "1 - New Game\n" +
                                 "2 - Input Game History\n" +
-                                "\n" +
-                                "For more information, please type 'help'\n");
+                                "exit - Exit Game\n\n";
+            if (!w.getShowHelp()) {outString+="For more information, please type 'help'\n";}
+            else {
+                outString+="\nWelcome to Command Line Chess by Liam :)\n\n"+
+                        "You can start a new chess game by pressing "+ 
+                        "1, or input a valid PGN or FEN string by "+ 
+                        "entering 2. For more help in game, start a "+
+                        "game and then enter the help command again.";
+                w.setShowHelp(false);
+            }
         }
         else {
-            System.out.println("Please enter your pgn string:");
+            outString+="Please enter your pgn string:";
         }
+        System.out.println(outString);
     }
 
     public void drawChessGame(ChessGame cg) {
@@ -65,8 +75,14 @@ public class View {
         outString+="\n\n";
         if (cg.getResult()==null) {
             if (cg.getCBS().getWhitesTurn()) {outString+="White";}
-        else {outString+="Black";}
-        outString+=" to move";
+            else {outString+="Black";}
+            outString+=" to move";
+            if (cg.getShowHelp()) {
+                //TODO show help for chess game ingame
+                outString+="\n\nPlease enter your moves using standard PGN notation excluding '!' and '?' characters";
+                outString+="\n\nOther options include:\nundo - undoes the last move\nredo - redoes the last undone move\nback - go back to the main menu\nquit - quit game";
+                cg.setShowHelp(false);
+            }
         }
         else {
             if (cg.getResult().equals("draw")) {
@@ -78,6 +94,10 @@ public class View {
                 outString+=" wins!";
             }
             outString+="\n\nWhat would you like to do?\n\n1 - Go to Main Menu\n2 - Start new game\nexit - close program";
+            if (cg.getShowHelp()) {
+                //TODO show help for chess game game finished
+                cg.setShowHelp(false);
+            }
         }
         System.out.println(outString);
     }

@@ -16,7 +16,7 @@ public class Controller {
 
         //universal commands
         if (command.equals("back")) {game.goBack(); return;}
-        if (command.equals("help")) {System.out.println("TODO: Implement help"); return;}
+        if (command.equals("help")) {game.getCurrentState().setShowHelp(true); return;}
 
         
         GameState cs = game.getCurrentState();
@@ -33,9 +33,6 @@ public class Controller {
                     case "2":
                         ws.setReceiveingString(true);
                         System.out.println("Please enter your PGN string:");
-                        break;
-                    case "help":
-                        System.out.println("When in a game, use command 'quit' to return to the main menu :)");
                         break;
                     default:
                         break;
@@ -63,11 +60,11 @@ public class Controller {
                     case "redo":
                         cg.redo();
                         break;
-                
                     default:
                     try {
                         cg.attemptMove(command);
                     } catch (Exception e) {
+                        // TODO - can I pass this error message to the view to tell a player why their move failed?
                         System.out.println(e.getMessage());
                     }
                         break;
