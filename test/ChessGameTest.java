@@ -167,7 +167,8 @@ public class ChessGameTest {
     }
     @Test
     public void testIsSquareUnderThreat() {
-        // TODO test this
+        ChessGame cg = new ChessGame("rnbq1rk1/ppppbppp/5n2/4p3/3P4/2NQB3/PPP1PPPP/2KR1BNR b - - 7 5");
+
     }
     @Test
     public void testIsSquareInPieceMoveRange() {
@@ -197,11 +198,12 @@ public class ChessGameTest {
     }
     @Test
     public void testStalemateChecker() {
-        //TODO test
+        
     }
     @Test
     public void testCheckmateChecker() {
-        //TODO test
+        //ChessGame cg = new ChessGame("r1b1k1nr/ppp1npbp/4P1p1/8/8/4B3/PqP1PPPP/1K1R1BNR w kq - 0 10");
+        //assertTrue(cg.checkmateChecker(cg.getBoard(), false, null));
     }
     @ParameterizedTest
     @CsvSource({
@@ -210,7 +212,7 @@ public class ChessGameTest {
         "r1b1k1nr/ppp1npbp/4P1p1/8/8/4B3/PqP1PPPP/1K1R1BNR w kq - 0 10, 1. Nc3 Nc6 2. d4 g6 3. d5 e5 4. dxe6 Nce7 5. Qxd7+ Qxd7 6. Nd5 Qxd5 7. Be3 Qb5 8. O-O-O Bg7 9. Kb1 Qxb2#"
     })
     public void testBulkPGNMoveMaker(String fen, String pgn) {
-        /*
+        
         ChessGame fenCG = new ChessGame(fen);
         BoardState fbs = fenCG.getCBS();
         ChessGame pgnCG = new ChessGame(pgn);
@@ -227,7 +229,7 @@ public class ChessGameTest {
                 assertEquals(fbs.getBoard()[row][col], pbs.getBoard()[row][col]);
             }
         }
-        */
+        
     }
 
 }

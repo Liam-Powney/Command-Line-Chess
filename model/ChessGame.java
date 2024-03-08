@@ -288,15 +288,21 @@ public class ChessGame extends GameState{
                 else if (m.getStartCol()==7 && m.getPieceType().equals("rook")) {bCastleL=false;}
                 else if(m.getStartCol()==4 && m.getPieceType().equals("king")) {bCastleS=false; bCastleL=false;}
             }
+            // set enpassant square
+            if (m.getPieceType().equals("pawn") && Math.abs(m.getEndRow()-m.getStartRow())==2) {
+                if (cbs.getWhitesTurn()) {enPassantSquare= new int[] {m.getEndCol(), m.getEndRow()-1};}
+                else {enPassantSquare= new int[] {m.getEndCol(), m.getEndRow()+1};}
+            }
         }
         else {
             // check if the castling move is legal
             try {newBoard=isMoveLegal(cbs, m.getCastleShort());} 
             catch (Exception e) {throw new IllegalArgumentException("Castle attemp illegal. Reason given: " + e.getMessage());}
 
-            // set castling rights flags on new boardstate
+            // set castling rights flags and enPassant square on new boardstate
             if (cbs.getWhitesTurn())    {wCastleS=false; wCastleL=false;}
             else                        {bCastleS=false; bCastleL=false;}
+            enPassantSquare=null;
         }
 
         // halfmove logic
@@ -311,9 +317,9 @@ public class ChessGame extends GameState{
 
         // state checkers (check, checkmate, stalemate, halfmove count)
         if (halfMove==100) {}//TODO: It's a draw :)
-        if (checkmateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {} // TODO: It's checkmate
-        if (checkChecker(cbs.getBoard(), cbs.getWhitesTurn())) {} // TODO: It's check
-        if (stalemateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {} // TODO: It's stalemate
+        if (checkmateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {System.out.println("Checkmate!");} // TODO: It's checkmate
+        else if (checkChecker(cbs.getBoard(), cbs.getWhitesTurn())) {System.out.println("Check!");} // TODO: It's check
+        else if (stalemateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {System.out.println("Draw!");} // TODO: It's stalemate
     }
 
 
@@ -351,8 +357,20 @@ public class ChessGame extends GameState{
                 // ensure the move is corerctly labelled with capture, check, and checkmate info
                 // if the pgn indicates the move is a capture but the target square is empty and the target square isn't the en passant square being moved to by a pawn 
                 if (pgn.getCapture() && board[pgn.getEndRow()][pgn.getEndCol()]==null && !(p instanceof Pawn && Arrays.equals(bs.getEnPassantSquare(), new int[] {pgn.getEndCol(), pgn.getEndRow()}))) {continue;}
-                if (checkChecker(boardAfterMove, !bs.getWhitesTurn()) != pgn.getCheck()) {continue;}
-                if (checkmateChecker(boardAfterMove, !bs.getWhitesTurn(), bs.getEnPassantSquare()) != pgn.getCheckmate()) {continue;}
+                
+                // set enpassant square
+                int[] newEPS=null;
+                if (pgn.getPieceType().equals("pawn") && Math.abs(pgn.getEndRow()-pieceCoords[1])==2) {
+                    if (bs.getWhitesTurn()) {newEPS= new int[] {pgn.getEndCol(), pgn.getEndRow()-1};}
+                    else {newEPS= new int[] {pgn.getEndCol(), pgn.getEndRow()+1};}
+                }
+
+                boolean check=checkChecker(boardAfterMove, !bs.getWhitesTurn());
+                boolean checkmate=checkmateChecker(boardAfterMove, !bs.getWhitesTurn(), newEPS);
+                if (!check && pgn.getCheck()) {continue;}
+                if (!checkmate && pgn.getCheckmate()) {continue;}
+                if (check && !checkmate && !pgn.getCheck()) {continue;}
+                if (checkmate && !pgn.getCheckmate()) {continue;}
 
                 out.put(new Move(pgn, pieceCoords[0], pieceCoords[1]), boardAfterMove);
             }
@@ -417,9 +435,9 @@ public class ChessGame extends GameState{
         if (endSquare!=null && endSquare.getWhite()==p.getWhite()) {return false;} // target square has same colour piece on
 
         // if it's not a pawn move
-        if (!(p instanceof Pawn)) { return isSquareInPieceThreatRange(board, squareCol, squareRow, pieceCol, pieceRow);}
+        if (!(p instanceof Pawn)) { return isSquareInPieceThreatRange(board, pieceCol, pieceRow, squareCol, squareRow);}
         // if it's a pawn move and it's a capture or en passant move
-        if (p instanceof Pawn && (squareCol!=pieceCol && endSquare!=null && endSquare.getWhite()!=p.getWhite()) || (endSquare==null && enPassantSquare!=null && Arrays.equals(enPassantSquare, new int[] {squareCol, squareRow})) ) {return isSquareInPieceThreatRange(board, squareCol, squareRow, pieceCol, pieceRow);}
+        if (p instanceof Pawn && (squareCol!=pieceCol && endSquare!=null && endSquare.getWhite()!=p.getWhite()) || (endSquare==null && enPassantSquare!=null && Arrays.equals(enPassantSquare, new int[] {squareCol, squareRow})) ) {return isSquareInPieceThreatRange(board, pieceCol, pieceRow, squareCol, squareRow);}
         // pawn push
         if (p instanceof Pawn && pieceCol==squareCol) {
             // single push
@@ -541,6 +559,9 @@ public class ChessGame extends GameState{
         int[][][] moves = p.getMoves();
         for (int direction=0; direction<moves.length; direction++) {
             for (int increment=0; increment<moves[direction].length; increment++) {
+                int endCol = col+moves[direction][increment][0];
+                int endRow = row+moves[direction][increment][1];
+                if ( endCol <0 || endCol>7 || endRow<0 || endRow>7 ) {break;}
                 Piece[][] testBoard;
                 try {
                     testBoard=isMoveLegal(board, p.getWhite(), col, row, col+moves[direction][increment][0], row+moves[direction][increment][1], enPassantSquare);
