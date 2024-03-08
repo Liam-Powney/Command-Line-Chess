@@ -344,14 +344,13 @@ public class ChessGame extends GameState{
             result="draw";
         }
 
-        // TODO debug 3-fold repetition detection
         int repCounter=0;
         for (BoardState bs : boardStateStack) {
             if (isPositionEqual(bs)) {
                 repCounter++;
+                if (repCounter>=3) {result="draw"; break;}
             }
         }
-        if (repCounter>=3) {result="draw";}
     }
 
 
