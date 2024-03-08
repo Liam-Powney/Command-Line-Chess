@@ -68,7 +68,7 @@ public class View {
         else {outString+="Black";}
         outString+=" to move";
         }
-        else (cg.getResult()!=null) {
+        else {
             if (cg.getResult().equals("draw")) {
                 outString+="It's a draw!";
             }
