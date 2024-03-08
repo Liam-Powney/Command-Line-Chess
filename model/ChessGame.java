@@ -336,7 +336,7 @@ public class ChessGame extends GameState{
 
         // state checkers (check, checkmate, stalemate, halfmove count)
         if (checkmateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {
-            if (cbs.getWhitesTurn()) {result="white";}
+            if (!cbs.getWhitesTurn()) {result="white";}
             else {result="black";}
         }
         //else if (checkChecker(cbs.getBoard(), cbs.getWhitesTurn())) {System.out.println("Check!");}
