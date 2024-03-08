@@ -20,6 +20,11 @@ public class Game {
     public void startNewChessGame(String in) {
         goToWelcomeScreen();
         gamestateStack.push(new ChessGame(in));
+        if ( ((ChessGame)gamestateStack.peek()).getResult()!=null) {
+            String message = ((ChessGame)gamestateStack.peek()).getPlayerMessage();
+            gamestateStack.pop();
+            gamestateStack.peek().setPlayerMessage(message);
+        }
     }
     public void goToWelcomeScreen() {
         while (gamestateStack.size()>1) {gamestateStack.pop();}

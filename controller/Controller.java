@@ -20,6 +20,7 @@ public class Controller {
 
         
         GameState cs = game.getCurrentState();
+        cs.setPlayerMessage(null);
         if (cs instanceof WelcomeScreen) {
 
             // welcome screen command parser
@@ -27,14 +28,14 @@ public class Controller {
             if (!ws.getReceivingString()) {
                 switch (command) {
                     case "1":
-                        System.out.print("\nStarting new game...\n\n");
                         game.startNewChessGame();
                         break;
                     case "2":
                         ws.setReceiveingString(true);
-                        System.out.println("Please enter your PGN string:");
+                        ws.setPlayerMessage("Please enter your PGN string:");
                         break;
                     default:
+                        ws.setPlayerMessage("Please enter a valid command");
                         break;
                 }
             }
@@ -42,7 +43,7 @@ public class Controller {
                 try {
                     game.startNewChessGame(command);
                 } catch (Exception e) {
-                    System.out.println("Not a valid pgn or fen string");
+                    ws.setPlayerMessage("Not a valid pgn or fen string");
                 } finally {
                     ws.setReceiveingString(false);
                 }
@@ -64,8 +65,7 @@ public class Controller {
                     try {
                         cg.attemptMove(command);
                     } catch (Exception e) {
-                        // TODO - can I pass this error message to the view to tell a player why their move failed?
-                        System.out.println(e.getMessage());
+                        cg.setPlayerMessage(e.getMessage());
                     }
                         break;
                 }

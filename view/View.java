@@ -23,6 +23,7 @@ public class View {
         clearScreen();
         if (gs instanceof WelcomeScreen) {drawWelcomeScreen((WelcomeScreen)gs);}
         else if (gs instanceof ChessGame) {drawChessGame((ChessGame)gs);}
+        if (gs.getPlayerMessage()!=null) {System.out.println(gs.getPlayerMessage());}
     }
 
     public void drawWelcomeScreen(WelcomeScreen w) {
@@ -44,6 +45,10 @@ public class View {
         }
         else {
             outString+="Please enter your pgn string:";
+        }
+        if (w.getPlayerMessage()!=null) {
+            outString+="\n\n" + w.getPlayerMessage();
+            w.setPlayerMessage(null);
         }
         System.out.println(outString);
     }
@@ -78,7 +83,6 @@ public class View {
             else {outString+="Black";}
             outString+=" to move";
             if (cg.getShowHelp()) {
-                //TODO show help for chess game ingame
                 outString+="\n\nPlease enter your moves using standard PGN notation excluding '!' and '?' characters";
                 outString+="\n\nOther options include:\nundo - undoes the last move\nredo - redoes the last undone move\nback - go back to the main menu\nquit - quit game";
                 cg.setShowHelp(false);
@@ -95,7 +99,7 @@ public class View {
             }
             outString+="\n\nWhat would you like to do?\n\n1 - Go to Main Menu\n2 - Start new game\nexit - close program";
             if (cg.getShowHelp()) {
-                //TODO show help for chess game game finished
+                outString+="\n\nPlease choose from the options above :)";
                 cg.setShowHelp(false);
             }
         }

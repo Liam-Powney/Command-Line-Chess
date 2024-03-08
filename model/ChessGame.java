@@ -26,7 +26,11 @@ public class ChessGame extends GameState{
         this.undoStack = new Stack<BoardState>();
         if (in.charAt(0)=='1') {
             boardStateStack.push(new BoardState());
-            applyBulkPGNMoves(in);
+            try {
+                applyBulkPGNMoves(in);
+            } catch (Exception e) {
+                setPlayerMessage(e.getMessage());
+            }
         }
         else {
             createFENBoard(in);
@@ -43,6 +47,7 @@ public class ChessGame extends GameState{
             if (i%3==0 && !(pgnA[i].equals(Integer.toString((i/3)+1) + "."))) {throw new IllegalArgumentException("your pgn was formatted incorrectly");}
             try {if (i%3!=0) {attemptMove(pgnA[i]);}}
             catch (Exception e) {throw new IllegalArgumentException("your string contained the illegal move " + pgnA[i]);}
+            if (result!=null) {throw new IllegalArgumentException("your string was illegal - game terminated at move " + i/3 + " with result: " + getResult());}
         }
     }
 
@@ -283,10 +288,10 @@ public class ChessGame extends GameState{
         if (m.getCastleShort()==null) {
             HashMap<Move, Piece[][]> moveList = possibleMovesForDecodedPGN(cbs, m);
             if (moveList.size()>1) {
-                throw new IllegalArgumentException("More than one piece can make that move!");
+                throw new IllegalArgumentException("More than one piece can move to that square! Please add disambiguation info");
             }
             else if (moveList.size()==0) {
-                throw new IllegalArgumentException("No piece can make that move!");
+                throw new IllegalArgumentException("Your piece can't reach that square!");
             }
             m = moveList.keySet().iterator().next();
             newBoard = moveList.get(m);
@@ -333,12 +338,20 @@ public class ChessGame extends GameState{
         if (checkmateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {
             if (cbs.getWhitesTurn()) {result="white";}
             else {result="black";}
-            System.out.println("Checkmate!");
         }
-        else if (checkChecker(cbs.getBoard(), cbs.getWhitesTurn())) {System.out.println("Check!");}
+        //else if (checkChecker(cbs.getBoard(), cbs.getWhitesTurn())) {System.out.println("Check!");}
         else if (halfMove==100 || stalemateChecker(cbs.getBoard(), cbs.getWhitesTurn(), cbs.getEnPassantSquare())) {
             result="draw";
-            System.out.println("Draw!");}
+        }
+
+        // TODO debug 3-fold repetition detection
+        int repCounter=0;
+        for (BoardState bs : boardStateStack) {
+            if (isPositionEqual(bs)) {
+                repCounter++;
+            }
+        }
+        if (repCounter>=3) {result="draw";}
     }
 
 
@@ -716,5 +729,18 @@ public class ChessGame extends GameState{
             return new Move(endCol, endRow, startCol, capture, check, checkmate, promoPieceType);
         }
         return new Move(pieceType, startCol, startRow, endCol, endRow, capture, check, checkmate);
+    }
+
+    public boolean isPositionEqual(BoardState bs) {
+        Piece[][] board = bs.getBoard();
+        for (int r=0; r<8; r++) {
+            for (int c=0; c<8; c++) {
+                Piece s1 = board[r][c];
+                Piece s2 = getBoard()[r][c];
+                if (s1==null ^ s2==null) {return false;}
+                if (!(s1==s2 || s1.equals(s2))) {return false;}
+            }
+        }
+        return true;
     }
 }
