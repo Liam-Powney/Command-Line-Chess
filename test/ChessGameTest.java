@@ -17,12 +17,9 @@ import model.Piece;
 
 
 public class ChessGameTest {
-    
-    ChessGame cg = new ChessGame();
-    BoardState cgCBS = cg.getCBS();
-
     @Test
     public void testTargetCoords() {
+        ChessGame cg = new ChessGame();
         assertThrows(IllegalArgumentException.class, () -> cg.targetCoords(""), "Empty string doesn't throw an exception.");
         assertThrows(IllegalArgumentException.class, () -> cg.targetCoords("a9"), "\"a9\" doesn't throw an exception.");
         assertThrows(IllegalArgumentException.class, () -> cg.targetCoords("i2"), "\"i2\" doesn't throw an exception.");
@@ -37,29 +34,25 @@ public class ChessGameTest {
         assertTrue(Arrays.equals(cg.targetCoords("f2"), new int[] {5, 1}));
         assertTrue(Arrays.equals(cg.targetCoords("aksjckienca389rg43ch4"), new int[] {7, 3}));
     }
-
-
-
     @Test
     public void testFENParser() {
-        ChessGame fenGame = new ChessGame("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-        BoardState cbs = fenGame.getCBS();
-        assertEquals(cbs.getWhitesTurn(), cgCBS.getWhitesTurn());
-        assertEquals(cbs.getWCastleS(), cgCBS.getWCastleS());
-        assertEquals(cbs.getWCastleL(), cgCBS.getWCastleL());
-        assertEquals(cbs.getBCastleS(), cgCBS.getBCastleS());
-        assertEquals(cbs.getBCastleL(), cgCBS.getBCastleL());
-        assertEquals(cbs.getHalfMove(), cgCBS.getHalfMove());
-        assertEquals(cbs.getFullMove(), cgCBS.getFullMove());
+        ChessGame cg1 = new ChessGame();
+        ChessGame cg2 = new ChessGame("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        BoardState bs1 = cg1.getCBS();
+        BoardState bs2 = cg2.getCBS();
+        assertEquals(bs1.getWhitesTurn(), bs2.getWhitesTurn());
+        assertEquals(bs1.getWCastleS(), bs2.getWCastleS());
+        assertEquals(bs1.getWCastleL(), bs2.getWCastleL());
+        assertEquals(bs1.getBCastleS(), bs2.getBCastleS());
+        assertEquals(bs1.getBCastleL(), bs2.getBCastleL());
+        assertEquals(bs1.getHalfMove(), bs2.getHalfMove());
+        assertEquals(bs1.getFullMove(), bs2.getFullMove());
         for (int row=0; row<8; row++) {
             for (int col=0; col<8; col++) {
-                assertEquals(fenGame.getBoard()[row][col], cg.getBoard()[row][col]);
+                assertEquals(bs1.getBoard()[row][col], bs2.getBoard()[row][col]);
             }
         }
-
-
     }
-
     @ParameterizedTest
     @CsvSource({
         "e4, pawn, 4, , 4, 3, false, false, false, , ",
@@ -78,6 +71,7 @@ public class ChessGameTest {
         "O-O-O#, , , , , , false, false, true, ,false ",
     })
     public void testPGNCommandParser(String input, String pieceType, Integer startCol, Integer startRow, Integer endCol, Integer endRow, boolean capture, boolean check, boolean checkmate, String promoPieceType, Boolean castleShort) {
+        ChessGame cg = new ChessGame();
         Move m = cg.moveParser(input);
         assertNotNull(m);
         assertEquals(pieceType, m.getPieceType());
@@ -93,6 +87,7 @@ public class ChessGameTest {
     }
     @Test
     public void testPGNCommandParserForErrors() {
+        ChessGame cg = new ChessGame();
         assertThrows(IllegalArgumentException.class, () -> cg.moveParser("askbkjbkjb"));
         assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Rxa9"));
         assertThrows(IllegalArgumentException.class, () -> cg.moveParser("Qixa7"));
@@ -107,91 +102,90 @@ public class ChessGameTest {
     }
     @Test
     public void testBoardCloner() {
-
-        Piece[][] board=cg.getBoard();
-        Piece[][] test = cg.cloneBoard(board);
-        
+        ChessGame cg = new ChessGame();
+        Piece[][] test = cg.cloneBoard(cg.getBoard());
         for (int row=0; row<8; row++) {
             for (int col=0; col<8; col++) {
-                assertEquals(board[row][col], test[row][col]);
+                assertEquals(cg.getBoard()[row][col], test[row][col]);
             }
         }
     }
     @Test
     public void testGetKingCoords() {
-        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), cgCBS.getWhitesTurn()), new int[] {4, 0}));
-        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), !cgCBS.getWhitesTurn()), new int[] {4, 7}));
+        ChessGame cg = new ChessGame();
+        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), cg.getCBS().getWhitesTurn()), new int[] {4, 0}));
+        assertTrue(Arrays.equals(cg.getKingsCoords(cg.getBoard(), !cg.getCBS().getWhitesTurn()), new int[] {4, 7}));
         Piece[][] test = cg.cloneBoard(cg.getBoard());
         test[0][4]=null;
-        assertThrows(IllegalArgumentException.class, () -> cg.getKingsCoords(test, cgCBS.getWhitesTurn()));
+        assertThrows(IllegalArgumentException.class, () -> cg.getKingsCoords(test, cg.getCBS().getWhitesTurn()));
+    }
+    @ParameterizedTest
+    @CsvSource({
+        "3, 1, 3, 3, rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1",
+        "4, 0, 2, 4, rnbqkbnr/pppppppp/8/2K5/8/8/PPPPPPPP/RNBQ1BNR w kq - 0 1",
+        "4, 1, 3, 2, rnbqkbnr/pppppppp/8/8/8/3P4/PPPP1PPP/RNBQKBNR w kq - 0 1"
+    })
+    public void moveMaker(int startCol, int startRow, int endCol, int endRow, String endPos) {
+        ChessGame cg1 = new ChessGame();
+        Piece[][] test = cg1.performMove(cg1.getBoard(), startCol, startRow, endCol, endRow);
+        ChessGame cg2 = new ChessGame(endPos);
+        for (int r=0; r<8; r++) {
+            for (int c=0; c<8; c++) {
+                assertEquals(test[r][c], cg2.getBoard()[r][c]);
+            }
+        }
     }
     @Test
-    public void testIsSquareInRange() {
-        cg = new ChessGame();
-        assertTrue(cg.isSquareInPieceRange(new Move("pawn", 0, 1, 0, 3, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("pawn", 0, 1, 1, 2, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("pawn", 0, 1, 1, 3, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("knight", 1, 0, 1, 3, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("knight", 1, 0, 2, 2, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("knight", 1, 0, 2, 2, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("bishop", 2, 0, 2, 4, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("bishop", 2, 0, 7, 3, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("queen", 3, 0, 4, 0, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("queen", 3, 0, 4, 0, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("king", 4, 0, 4, 1, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("king", 4, 0, 4, 1, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("king", 4, 0, 4, 0, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("king", 4, 0, 4, 0, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertThrows(IllegalArgumentException.class, () -> cg.isSquareInPieceRange(new Move("king", 4, 7, 4, 6, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertThrows(IllegalArgumentException.class, () -> cg.isSquareInPieceRange(new Move("pawn", 4, 6, 4, 5, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("pawn", 4, 6, 4, 5, false), cg.getBoard(), !cg.getCBS().getWhitesTurn()));
-        cg = new ChessGame("2kr1bnr/pb1nqp1p/1p4p1/2ppN3/3P4/2NQ4/PPPBBPPP/4RRK1 b - - 1 11");
-        assertTrue(cg.isSquareInPieceRange(new Move("king", 2, 7, 2, 6, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("pawn", 2, 4, 3, 3, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("knight", 3, 6, 4, 4, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("queen", 4, 6, 4, 4, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("queen", 4, 6, 7, 3, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("rook", 3, 7, 4, 7, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("pawn", 6, 5, 6, 4, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertTrue(cg.isSquareInPieceRange(new Move("pawn", 7, 6, 7, 4, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("king", 2, 7, 1, 6, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("king", 2, 7, 1, 6, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("bishop", 5, 7, 4, 6, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("bishop", 1, 6, 5, 2, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("bishop", 1, 6, 5, 2, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("queen", 4, 6, 4, 0, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("queen", 4, 6, 4, 0, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("pawn", 2, 4, 3, 3, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertFalse(cg.isSquareInPieceRange(new Move("pawn", 2, 4, 2, 3, true), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertThrows(IllegalArgumentException.class, () -> cg.isSquareInPieceRange(new Move("pawn", 0, 1, 0, 3, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        assertThrows(IllegalArgumentException.class, () -> cg.isSquareInPieceRange(new Move("pawn", 7, 3, 0, 3, false), cg.getBoard(), cg.getCBS().getWhitesTurn()));
-        
+    public void moveMakerCastle() {
+        ChessGame cg = new ChessGame("rnbqk2r/pppppppp/8/8/8/8/PPPPPPPP/R3KBNR w KQkq - 0 1");
+        Piece[][] board1 = cg.performMove(cg.getBoard(), true, false);
+        ChessGame cg1 = new ChessGame("rnbqk2r/pppppppp/8/8/8/8/PPPPPPPP/2KR1BNR b kq - 1 1");
+        for (int r=0; r<8; r++) {
+            for (int c=0; c<8; c++) {
+                assertEquals(board1[r][c], cg1.getBoard()[r][c]);
+            }
+        }
+        Piece[][] board2 = cg1.performMove(board1, false, true);
+        ChessGame cg2 = new ChessGame("rnbq1rk1/pppppppp/8/8/8/8/PPPPPPPP/2KR1BNR w - - 2 2");
+        for (int r=0; r<8; r++) {
+            for (int c=0; c<8; c++) {
+                assertEquals(board2[r][c], cg2.getBoard()[r][c]);
+            }
+        }
+        // TODO test this
     }
     @Test
-    public void testThreatSquare() {
-        cg = new ChessGame();
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), true, 0, 5));
-        assertFalse(cg.isSquareThreatened(cg.getBoard(), false, 0, 5));
-        cg = new ChessGame("2kr1bnr/pb1nqp1p/1p4p1/2ppN3/3P4/2NQ4/PPPBBPPP/4RRK1 b - - 1 11");
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), true, 4, 5));
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), false, 6, 5));
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), true, 0, 7));
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), false, 2, 4));
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), true, 4, 4));
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), true, 4, 5));
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), true, 2, 6));
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), false, 2, 3));
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), true, 2, 3));
-        assertTrue(cg.isSquareThreatened(cg.getBoard(), false, 3, 6));
-        assertFalse(cg.isSquareThreatened(cg.getBoard(), true, 5, 2));
-        assertFalse(cg.isSquareThreatened(cg.getBoard(), true, 3, 0));
-        assertFalse(cg.isSquareThreatened(cg.getBoard(), true, 3, 2));
-        assertFalse(cg.isSquareThreatened(cg.getBoard(), true, 2, 2));
-        assertFalse(cg.isSquareThreatened(cg.getBoard(), false, 4, 5));
-        assertFalse(cg.isSquareThreatened(cg.getBoard(), false, 3, 7));
-        assertFalse(cg.isSquareThreatened(cg.getBoard(), false, 7, 7));
-        assertFalse(cg.isSquareThreatened(cg.getBoard(), false, 7, 3));
+    public void testIsSquareInPieceThreatRange() {
+        // TODO test this
+        ChessGame cg = new ChessGame("rnbq1rk1/ppppbppp/5n2/4p3/3P4/2NQB3/PPP1PPPP/2KR1BNR b - - 7 5");
+        assertTrue(cg.isSquareInPieceThreatRange(cg.getBoard(), 5, 5, 4, 3));
+        assertFalse(cg.isSquareInPieceThreatRange(cg.getBoard(), 5, 5, 6, 7));
+        assertTrue(cg.isSquareInPieceThreatRange(cg.getBoard(), 3, 3, 4, 4));
+        assertTrue(cg.isSquareInPieceThreatRange(cg.getBoard(), 3, 3, 2, 4));
+        assertFalse(cg.isSquareInPieceThreatRange(cg.getBoard(), 3, 3, 3, 4));
+        assertFalse(cg.isSquareInPieceThreatRange(cg.getBoard(), 3, 3, 7, 7));
     }
+    @Test
+    public void testIsSquareUnderThreat() {
+        // TODO test this
+    }
+    @Test
+    public void testIsSquareInPieceMoveRange() {
+        // TODO test this
+    }
+    @Test
+    public void testIsMoveLegal() {
+        // TODO test this
+    }
+    @Test
+    public void testIsMoveLegalCastle() {
+        // TODO test this
+    }
+    @Test
+    public void testPossibleMovesForDecodedPGN() {
+        // TODO test this
+    }
+    
     @Test
     public void testCheckChecker() {
         ChessGame fenGame = new ChessGame("rnbqkbnr/ppppp2p/5p2/6pQ/2N5/4P3/PPPP1PPP/R1B1KBNR w KQkq - 0 1");
@@ -203,29 +197,11 @@ public class ChessGameTest {
     }
     @Test
     public void testStalemateChecker() {
-        cg = new ChessGame();
-        assertFalse(cg.stalemateChecker(cg.getCBS(), true));
-        assertFalse(cg.stalemateChecker(cg.getCBS(), true));
-        cg.attemptMove("e4");
-        assertFalse(cg.stalemateChecker(cg.getCBS(), false));
-
+        //TODO test
     }
     @Test
     public void testCheckmateChecker() {
-        ChessGame fenGame = new ChessGame("rnbqkbnr/ppppp2p/5p2/6pQ/2N5/4P3/PPPP1PPP/R1B1KBNR w KQkq - 0 1");
-        assertTrue(fenGame.checkmateChecker(fenGame.getCBS(), false));
-        assertFalse(fenGame.checkmateChecker(fenGame.getCBS(), true));
-        fenGame = new ChessGame("rnbqkbnr/8/8/8/8/P7/8/RNBQKBNR w KQkq - 0 1");
-        assertFalse(fenGame.checkmateChecker(fenGame.getCBS(), true));
-        assertFalse(fenGame.checkmateChecker(fenGame.getCBS(), false));
-        fenGame = new ChessGame("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1");
-        assertFalse(fenGame.checkmateChecker(fenGame.getCBS(), true));
-        assertFalse(fenGame.checkmateChecker(fenGame.getCBS(), false));
-        fenGame = new ChessGame("r1b2rk1/ppp1ppbp/3q1Np1/8/1np1P3/5Q2/PBPPNPPP/2KR3R b - - 0 10");
-        assertFalse(fenGame.checkmateChecker(fenGame.getCBS(), false));
-        assertFalse(fenGame.checkmateChecker(fenGame.getCBS(), true));
-        fenGame = new ChessGame("r1b1k1nr/ppp1npbp/4P1p1/8/8/4B3/PqP1PPPP/1K1R1BNR w kq - 0 10");
-        assertTrue(fenGame.checkmateChecker(fenGame.getCBS(), true));
+        //TODO test
     }
     @ParameterizedTest
     @CsvSource({
