@@ -2,7 +2,6 @@ package model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Stack;
 
 public class ChessGame extends GameState{
@@ -369,6 +368,14 @@ public class ChessGame extends GameState{
             if (errorMessages.size()==1) { {throw new IllegalArgumentException(errorMessages.get(0));}}
             else  {throw new IllegalArgumentException("Any move your command could relate to is illegal.");}
         }
+
+        BoardState out = possibleBoardStates.get(0);
+        boolean check = checkChecker(out.getBoard(), out.getWhitesTurn());
+        boolean checkmate = checkmateChecker(out);
+
+        if (checkmate!=pgn.getCheckmate()) {throw new IllegalArgumentException("Incorrect use of checkmate indicator '#'. Please include/disclude");}
+        if (check!=pgn.getCheck() && !checkmate) {throw new IllegalArgumentException("Incorrect use of check indicator '+'. Please include/disclude");}
+
 
         return possibleBoardStates.get(0);
     }

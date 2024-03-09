@@ -15,6 +15,7 @@ public class Controller {
     public void executeCmd(String command) {
 
         //universal commands
+        if (command.equals("")) {return;}
         if (command.equals("back")) {game.goBack(); return;}
         if (command.equals("help")) {game.getCurrentState().setShowHelp(true); return;}
 
