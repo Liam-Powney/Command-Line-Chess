@@ -6,7 +6,7 @@ public class Move {
     private Integer startCol, startRow, endCol, endRow;
     private boolean capture, check, checkmate;
 
-    private String promoPieceType;
+    private Piece promoPiece;
     private Boolean castleShort;
 
     // CONSTRUCTORS
@@ -20,10 +20,10 @@ public class Move {
         this.capture=false;
         this.check = check;
         this.checkmate = checkmate;
-        this.promoPieceType=null;
+        this.promoPiece=null;
         this.castleShort = castleShort;
     }
-    // generic move constructor - used for game logic
+    // generic move constructors - used for game logic
     public Move(String pieceType, Integer startCol, Integer startRow, Integer endCol, Integer endRow, boolean capture) {
         this.pieceType=pieceType;
         this.startCol=startCol;
@@ -33,11 +33,23 @@ public class Move {
         this.capture=capture;
         this.check = false;
         this.checkmate = false;
-        this.promoPieceType=null;
+        this.promoPiece=null;
+        this.castleShort = null;
+    }
+    public Move(Integer startCol, Integer startRow, Integer endCol, Integer endRow) {
+        this.pieceType=null;
+        this.startCol=startCol;
+        this.startRow=startRow;
+        this.endCol=endCol;
+        this.endRow=endRow;
+        this.capture=false;
+        this.check = false;
+        this.checkmate = false;
+        this.promoPiece=null;
         this.castleShort = null;
     }
     // pawn move constructor (enter 'null' for promo piece type if no promo happening)
-    public Move(Integer endCol, Integer endRow, Integer startCol, boolean capture, boolean check, boolean checkmate, String promoPieceType) {
+    public Move(Integer endCol, Integer endRow, Integer startCol, boolean capture, boolean check, boolean checkmate, Piece promoPiece) {
         this.pieceType="pawn";
         this.startCol=startCol;
         this.startRow=null;
@@ -46,7 +58,7 @@ public class Move {
         this.capture=capture;
         this.check = check;
         this.checkmate = checkmate;
-        this.promoPieceType=promoPieceType;
+        this.promoPiece=promoPiece;
         this.castleShort=null;
     }
 
@@ -60,7 +72,7 @@ public class Move {
         this.capture=capture;
         this.check=check;
         this.checkmate=checkmate;
-        this.promoPieceType=null;
+        this.promoPiece=null;
         this.castleShort=null;
     }
 
@@ -74,7 +86,7 @@ public class Move {
         this.capture=m.getCapture();
         this.check=m.getCheck();
         this.checkmate=m.getCheckmate();
-        this.promoPieceType=m.getPromoPieceType();
+        this.promoPiece=m.getPromoPiece();
         this.castleShort=m.getCastleShort();
     }
 
@@ -87,5 +99,5 @@ public class Move {
     public boolean getCapture() {return capture;}
     public boolean getCheck() {return check;}
     public boolean getCheckmate() {return checkmate;}
-    public String getPromoPieceType() {return promoPieceType;}
+    public Piece getPromoPiece() {return promoPiece;}
 }

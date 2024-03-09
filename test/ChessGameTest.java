@@ -82,7 +82,7 @@ public class ChessGameTest {
         assertEquals(capture, m.getCapture());
         assertEquals(check, m.getCheck());
         assertEquals(checkmate, m.getCheckmate());
-        assertEquals(promoPieceType, m.getPromoPieceType());
+        assertEquals(promoPieceType, m.getPromoPiece());
         assertEquals(castleShort, m.getCastleShort());
     }
     @Test
