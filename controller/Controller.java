@@ -70,6 +70,7 @@ public class Controller {
                     }
                         break;
                 }
+                if (cg.getResult()!=null) {game.goToWelcomeScreen();}
             }
             else {
                 if (cg.getResult().equals("white")) {

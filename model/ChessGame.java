@@ -45,8 +45,8 @@ public class ChessGame extends GameState{
         for (int i=0; i<pgnA.length; i++) {
             if (i%3==0 && !(pgnA[i].equals(Integer.toString((i/3)+1) + "."))) {throw new IllegalArgumentException("your pgn was formatted incorrectly");}
             try {if (i%3!=0) {attemptMove(pgnA[i]);}}
-            catch (Exception e) {throw new IllegalArgumentException("your string contained the illegal move " + pgnA[i]);}
-            if (result!=null) {throw new IllegalArgumentException("your string was illegal - game terminated at move " + (i/3)+1 + " with result: " + getResult());}
+            catch (Exception e) {throw new IllegalArgumentException("Your string contained the illegal move " + pgnA[i]);}
+            if (result!=null) {throw new IllegalArgumentException("Your string described a game that terminated at move " + ((i/3)+1) + " with result: " + getResult());}
         }
     }
 
